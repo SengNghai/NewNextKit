@@ -1,4 +1,8 @@
+"use client"
+
 import Image from "next/image";
+import InstallPrompt from "../components/InstallPrompt";
+import PushNotificationManager from "../components/PushNotificationManager";
 
 export default function Home() {
   return (
@@ -47,6 +51,10 @@ export default function Home() {
           >
             Read our docs
           </a>
+        </div>
+        <div className="flex gap-4 items-center flex-col sm:flex-row">
+          <InstallPrompt />
+          <PushNotificationManager />
         </div>
       </main>
       <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
