@@ -10,4 +10,8 @@ const version = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '
 const versionFilePath = path.resolve(__dirname, 'public/version.js');
 fs.writeFileSync(versionFilePath, `self.PWA_VERSION = '${version}';\n`, 'utf8');
 
+// 创建版本号文件TS
+const versionFilePathTs = path.resolve(__dirname, 'src/utils/version.ts');
+fs.writeFileSync(versionFilePathTs, `export const PWA_VERSION = '${version}';\n`, 'utf8');
+
 console.log(`Version ${version} generated and written to ${versionFilePath}`);
