@@ -62,9 +62,6 @@ const currentTimestamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padS
     setSubscription(sub);
     const serializedSub = JSON.parse(JSON.stringify(sub));
     
-    notifyEndpointChange();
-
-
     await subscribeUser(serializedSub);
 
     // 使用 API 订阅
@@ -128,7 +125,8 @@ const currentTimestamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padS
   }
 
 
-  const notifyEndpointChange = () => {
+
+  useEffect(() => {
     if (subscription) {
       setNotifyEndpoint(JSON.stringify({
         subscription,
@@ -137,8 +135,7 @@ const currentTimestamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padS
         url,
       }));
     }
-  }
-  
+  }, [subscription, message, url, currentTimestamp]);
 
   if (!isSupported) {
     return <p>Push notifications are not supported in this browser.</p>;
