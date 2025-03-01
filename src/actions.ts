@@ -32,7 +32,7 @@ export async function unsubscribeUser() {
   return { success: true }
 }
  
-export async function sendNotification(message: string) {
+export async function sendNotification({message, url}: {message: string, url: string}) {
   console.log('Sending notification:', subscription);
     
   if (!subscription) {
@@ -47,7 +47,7 @@ export async function sendNotification(message: string) {
         title: 'Test Notification',
         body: message,
         icon: '/icon.png',
-        url: 'http://localhost:3000/dashboard'
+        url
       })
     )
     return { success: true }
