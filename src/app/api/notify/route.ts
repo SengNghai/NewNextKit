@@ -1,5 +1,5 @@
-import { NextApiRequest, NextApiResponse } from 'next';
-import webpush from '~/lib/webpush';
+import { NextRequest, NextResponse } from "next/server";
+import webpush from "~/lib/webpush";
 
 let subscription: IPushSubscription | null = null;
 
@@ -11,31 +11,37 @@ interface IPushSubscription extends PushSubscription {
   };
 }
 
-export async function POST(req: NextApiRequest, res: NextApiResponse) {
-  const { subscription: sub, message, url } = req.body;
+export async function POST(req: NextRequest) {
+  const { subscription: sub, message, url } = await req.json();
 
   if (sub) {
     subscription = sub;
-    return res.status(200).json({ success: true });
+    return NextResponse.json({ success: true });
   }
 
   if (!subscription) {
-    return res.status(400).json({ error: 'No subscription available' });
+    return NextResponse.json(
+      { error: "No subscription available" },
+      { status: 400 },
+    );
   }
 
   try {
     await webpush.sendNotification(
       subscription,
       JSON.stringify({
-        title: 'Test Notification',
+        title: "Test Notification",
         body: message,
-        icon: '/icon.png',
-        url
-      })
+        icon: "/icon.png",
+        url,
+      }),
     );
-    return res.status(200).json({ success: true });
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error sending notification:', error);
-    return res.status(500).json({ error: 'Failed to send notification' });
+    console.error("Error sending notification:", error);
+    return NextResponse.json(
+      { error: "Failed to send notification" },
+      { status: 500 },
+    );
   }
 }
