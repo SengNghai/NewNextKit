@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import InstallPrompt from "../components/InstallPrompt";
 import PushNotificationManager from "../components/PushNotificationManager";
+import ClientCurrentDomain from "~/components/ClientCurrentDomain";
+import NetworkedStatus from "~/components/NetworkedStatus";
+import APIResponseTime from "~/components/APIResponseTime";
 
 export default function Home() {
   const [message, setMessage] = useState("");
@@ -36,7 +39,15 @@ export default function Home() {
           height={38}
           priority
         />
-        <p>{message}</p> {/* 显示欢迎消息 */}
+        {/* 显示欢迎消息 */}
+        <p>{message}</p> 
+        {/* 当前的域名 */}
+        <ClientCurrentDomain /> 
+        {/* 当前的网络状态 */}
+        < NetworkedStatus />
+        {/* API 请求时间 */}
+        < APIResponseTime />
+        {/* 其它 */}
         <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
           <li className="mb-2">
             Get started by editing{" "}

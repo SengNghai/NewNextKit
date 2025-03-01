@@ -78,7 +78,7 @@ export default function PushNotificationManager() {
 
     async function sendTestNotification() {
         if (subscription) {
-            const url = `${window.location.href}dashboard`;
+            const url = `/dashboard`;
             const result = await sendNotification({message, url});
             if (!result.success) {
                 alert(result.error)
