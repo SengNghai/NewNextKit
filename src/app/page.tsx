@@ -7,6 +7,7 @@ import PushNotificationManager from "../components/PushNotificationManager";
 import ClientCurrentDomain from "~/components/ClientCurrentDomain";
 import NetworkedStatus from "~/components/NetworkedStatus";
 import APIResponseTime from "~/components/APIResponseTime";
+import { PWA_VERSION } from '~/utils/version';
 
 export default function Home() {
   const [message, setMessage] = useState("");
@@ -41,6 +42,7 @@ export default function Home() {
         />
         {/* 显示欢迎消息 */}
         <p>{message}</p> 
+        <p>当前的版本号：{PWA_VERSION}</p> 
         {/* 当前的域名 */}
         <ClientCurrentDomain /> 
         {/* 当前的网络状态 */}

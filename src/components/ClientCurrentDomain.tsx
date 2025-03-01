@@ -5,9 +5,9 @@ export default function ClientCurrentDomain() {
     const [currentDomain, setCurrentDomain] = useState<string>('');
     useEffect(() => {
 
-        let fetchDomain = async () => {
+        const fetchDomain = async () => {
             try {
-                let res = await fetch('/api/domain');
+                const res = await fetch('/api/domain');
                 const {currentDomain } = await res.json();
                 console.log(currentDomain);
                 setCurrentDomain(currentDomain);
