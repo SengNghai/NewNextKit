@@ -16,7 +16,11 @@ interface IPushSubscription extends PushSubscription {
 }
 
 // 存储无效的订阅信息（仅在内存中）
-let invalidSubscriptions: IPushSubscription[] = [];
+const invalidSubscriptions: IPushSubscription[] = [];
+
+interface PushError extends Error {
+  statusCode?: number;
+}
 
 export async function POST(request: Request) {
   const payload = await request.json();
@@ -26,17 +30,18 @@ export async function POST(request: Request) {
     await webpush.sendNotification(
       payload.subscription,
       JSON.stringify({
-        title: 'Test Notification',
+        title: payload.title,
         body: payload.message,
         icon: '/icon.png',
         url: payload.url
       })
     );
     return NextResponse.json({ success: true });
-  } catch (error: any) {
-    console.error('Error sending push notification:', error);
+  } catch (error) {
+    const pushError = error as PushError;
+    console.error('Error sending push notification:', pushError);
 
-    if (error.statusCode === 410) {
+    if (pushError.statusCode === 410) {
       // 处理订阅已取消或过期的情况
       console.error('Push subscription has unsubscribed or expired.');
       // 存储无效的订阅信息

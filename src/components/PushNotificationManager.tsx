@@ -15,6 +15,10 @@ export default function PushNotificationManager() {
 
   const [notifyEndpoint, setNotifyEndpoint] = useState<string>("");
   const url = `/dashboard`;
+  // 获取当前日期时间作为版本号
+const now = new Date();
+const currentTimestamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+
 
 
   const styles = {
@@ -57,6 +61,10 @@ export default function PushNotificationManager() {
     });
     setSubscription(sub);
     const serializedSub = JSON.parse(JSON.stringify(sub));
+    
+    notifyEndpointChange();
+
+
     await subscribeUser(serializedSub);
 
     // 使用 API 订阅
@@ -110,6 +118,7 @@ export default function PushNotificationManager() {
         body: JSON.stringify({
           subscription,
           message,
+          title: `Test Notification ${currentTimestamp}`,
           url,
         }),
       });
@@ -118,15 +127,18 @@ export default function PushNotificationManager() {
     }
   }
 
-  useEffect(() => {
+
+  const notifyEndpointChange = () => {
     if (subscription) {
       setNotifyEndpoint(JSON.stringify({
         subscription,
         message,
+        title: `Test Notification ${currentTimestamp}`,
         url,
       }));
     }
-  }, [subscription]);
+  }
+  
 
   if (!isSupported) {
     return <p>Push notifications are not supported in this browser.</p>;
@@ -172,6 +184,7 @@ export default function PushNotificationManager() {
           borderRadius: "8px",
         }}
       >
+        <h1 style={{ color: "green", fontWeight: "bold" }}>当前时间：{currentTimestamp}</h1>
         <h2 style={{ color: "green", fontWeight: "bold" }}>Subscription: </h2>
         <code style={{ color: "red" }}>
           {notifyEndpoint}
