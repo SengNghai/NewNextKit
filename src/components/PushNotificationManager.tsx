@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import {
-  sendNotification,
+  // sendNotification,
   subscribeUser,
   unsubscribeUser,
 } from "~/app/actions";
@@ -12,6 +12,11 @@ export default function PushNotificationManager() {
     null,
   );
   const [message, setMessage] = useState<string>("");
+
+  const [notifyEndpoint, setNotifyEndpoint] = useState<string>("");
+  const url = `/dashboard`;
+
+
   const styles = {
     backgroundColor: "blue",
     color: "#ffffff",
@@ -55,38 +60,44 @@ export default function PushNotificationManager() {
     await subscribeUser(serializedSub);
 
     // 使用 API 订阅
-    // const res = await fetch('/api/subscribe', {
-    //     method: 'POST',
-    //     headers: { 'Content-Type': 'application/json' },
-    //     body: JSON.stringify(serializedSub),
-    // });
-    // const data = await res.json();
-    // console.log(data);
+    /*
+    const res = await fetch('/api/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(serializedSub),
+    });
+    const data = await res.json();
+    console.log(data);
+    */
   }
 
   async function unsubscribeFromPush() {
     await subscription?.unsubscribe();
     setSubscription(null);
+    setNotifyEndpoint("");
     await unsubscribeUser();
     // 使用 API 取消订阅
-    // const serializedSub = JSON.parse(JSON.stringify(subscription))
-    // const res = await fetch('/api/unsubscribe', {
-    //     method: 'POST',
-    //     headers: { 'Content-Type': 'application/json' },
-    //     body: JSON.stringify({ endpoint: serializedSub.endpoint }),
-    // });
-    // const data = await res.json();
-    // console.log(data);
+    /*
+    const serializedSub = JSON.parse(JSON.stringify(subscription))
+    const res = await fetch('/api/unsubscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ endpoint: serializedSub.endpoint }),
+    });
+    const data = await res.json();
+    console.log(data);
+    */
   }
 
   async function sendTestNotification() {
     if (subscription) {
-      const url = `/dashboard`;
       // 第一种方式是直接调用
-      // const result = await sendNotification({ message, url });
-      // if (!result.success) {
-      //   alert(result.error);
-      // }
+      /*
+      const result = await sendNotification({ message, url });
+      if (!result.success) {
+        alert(result.error);
+      }
+      */
 
 
       /**
@@ -106,6 +117,16 @@ export default function PushNotificationManager() {
       setMessage("");
     }
   }
+
+  useEffect(() => {
+    if (subscription) {
+      setNotifyEndpoint(JSON.stringify({
+        subscription,
+        message,
+        url,
+      }));
+    }
+  }, [subscription]);
 
   if (!isSupported) {
     return <p>Push notifications are not supported in this browser.</p>;
@@ -153,7 +174,7 @@ export default function PushNotificationManager() {
       >
         <h2 style={{ color: "green", fontWeight: "bold" }}>Subscription: </h2>
         <code style={{ color: "red" }}>
-          {JSON.stringify(subscription, null, 2)}
+          {notifyEndpoint}
         </code>
       </div>
     </div>
