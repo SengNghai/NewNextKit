@@ -82,19 +82,27 @@ export default function PushNotificationManager() {
   async function sendTestNotification() {
     if (subscription) {
       const url = `/dashboard`;
-      const result = await sendNotification({ message, url });
-      if (!result.success) {
-        alert(result.error);
-      }
+      // 第一种方式是直接调用
+      // const result = await sendNotification({ message, url });
+      // if (!result.success) {
+      //   alert(result.error);
+      // }
 
-      // 使用 API 发送通知
-      // const res = await fetch('/api/notify', {
-      //     method: 'POST',
-      //     headers: { 'Content-Type': 'application/json' },
-      //     body: JSON.stringify({ message: 'Hello World!' }),
-      // });
-      // const data = await res.json();
-      // console.log(data);
+
+      /**
+       * 第二种方式： 使用 API 发送通知
+       * 传递 subscription、message 和 url
+       */
+      const res = await fetch('/api/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subscription,
+          message,
+          url,
+        }),
+      });
+      console.log(res);
       setMessage("");
     }
   }

@@ -1,7 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
-import webpush from "~/lib/webpush";
+import { NextResponse } from 'next/server';
+import webpush from 'web-push';
 
-let subscription: IPushSubscription | null = null;
+webpush.setVapidDetails(
+  'mailto:youremail@example.com',
+  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
+  process.env.VAPID_PRIVATE_KEY!
+);
 
 interface IPushSubscription extends PushSubscription {
   endpoint: string;
@@ -11,37 +15,35 @@ interface IPushSubscription extends PushSubscription {
   };
 }
 
-export async function POST(req: NextRequest) {
-  const { subscription: sub, message, url } = await req.json();
+// 存储无效的订阅信息（仅在内存中）
+let invalidSubscriptions: IPushSubscription[] = [];
 
-  if (sub) {
-    subscription = sub;
-    return NextResponse.json({ success: true });
-  }
-
-  if (!subscription) {
-    return NextResponse.json(
-      { error: "No subscription available" },
-      { status: 400 },
-    );
-  }
+export async function POST(request: Request) {
+  const payload = await request.json();
+  console.log('subscription', payload);
 
   try {
     await webpush.sendNotification(
-      subscription,
+      payload.subscription,
       JSON.stringify({
-        title: "Test Notification",
-        body: message,
-        icon: "/icon.png",
-        url,
-      }),
+        title: 'Test Notification',
+        body: payload.message,
+        icon: '/icon.png',
+        url: payload.url
+      })
     );
     return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error("Error sending notification:", error);
-    return NextResponse.json(
-      { error: "Failed to send notification" },
-      { status: 500 },
-    );
+  } catch (error: any) {
+    console.error('Error sending push notification:', error);
+
+    if (error.statusCode === 410) {
+      // 处理订阅已取消或过期的情况
+      console.error('Push subscription has unsubscribed or expired.');
+      // 存储无效的订阅信息
+      invalidSubscriptions.push(payload.subscription);
+      console.log('Invalid subscriptions:', invalidSubscriptions);
+    }
+
+    return NextResponse.json({ success: false, error: 'Failed to send notification' });
   }
 }
