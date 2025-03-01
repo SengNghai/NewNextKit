@@ -37,7 +37,8 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 
 
-5. 清理旧的服务工作线程
+## 清理旧的服务工作线程
+```shell
 手动清理旧的服务工作线程可以确保新的 service worker 正常激活：
 
 打开浏览器的开发者工具（通常按 F12 或 Ctrl+Shift+I）。
@@ -49,6 +50,7 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 点击 Unregister 按钮，注销旧的服务工作线程。
 
 通过这些步骤，你应该能够在 Next.js15.x 项目中全局处理服务工作线程的问题，并确保它在更新时能够正常工作。如果你遇到任何问题或需要进一步的帮助，请随时告诉我！
+```
 
 # 通过外部连接来打开我的 PWA
-是的，你完全可以使用 http://localhost:3000/?source=external 这样的链接来打开你的 PWA 应用。通过在 URL 中添加查询参数 ?source=external，你可以检测这个参数并根据其值执行特定的逻辑。
+- 是的，你完全可以使用 http://localhost:3000/?source=external 这样的链接来打开你的 PWA 应用。通过在 URL 中添加查询参数 ?source=external，你可以检测这个参数并根据其值执行特定的逻辑。
