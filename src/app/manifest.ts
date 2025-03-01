@@ -1,15 +1,17 @@
-import type { MetadataRoute } from 'next'
- 
+// app/manifest.ts
+import type { MetadataRoute } from 'next';
+import { PWA_VERSION } from '~/utils/version';
+
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'NewNextKit PWA',
     short_name: 'NewNextKit',
     description: 'A Progressive Web App built with Next.js',
-    start_url: '/',
+    start_url: `/?version=${PWA_VERSION}`,
     display: 'standalone',
     background_color: '#ffffff',
     theme_color: '#000000',
-    icons: [
+    icons: [    
       {
         src: '/icon-192x192.png',
         sizes: '192x192',
@@ -21,5 +23,5 @@ export default function manifest(): MetadataRoute.Manifest {
         type: 'image/png',
       },
     ],
-  }
+  };
 }

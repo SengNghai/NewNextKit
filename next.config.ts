@@ -1,7 +1,14 @@
-import type { NextConfig } from "next";
+import { execSync } from 'child_process';
+import type { NextConfig } from 'next';
+
+// 运行生成版本号的脚本
+if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'development') {
+  execSync('node generate-version.js');
+}
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  reactStrictMode: true,
+  swcMinify: true,
   async headers() {
     return [
       {
@@ -38,7 +45,10 @@ const nextConfig: NextConfig = {
           },
         ],
       },
-    ]
+    ];
+  },
+  publicRuntimeConfig: {
+    isProd: process.env.NODE_ENV === 'production',
   },
 };
 

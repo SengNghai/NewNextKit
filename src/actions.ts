@@ -36,7 +36,8 @@ export async function sendNotification(message: string) {
   console.log('Sending notification:', subscription);
     
   if (!subscription) {
-    throw new Error('No subscription available')
+    // throw new Error('No subscription available')
+    return { success: false, error: 'No subscription available 请先取消订阅->再重新订阅' }
   }
  
   try {
@@ -46,6 +47,7 @@ export async function sendNotification(message: string) {
         title: 'Test Notification',
         body: message,
         icon: '/icon.png',
+        url: 'http://localhost:3000/dashboard'
       })
     )
     return { success: true }

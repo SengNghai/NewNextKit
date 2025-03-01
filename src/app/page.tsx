@@ -1,10 +1,30 @@
-"use client"
+"use client";
 
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import InstallPrompt from "../components/InstallPrompt";
 import PushNotificationManager from "../components/PushNotificationManager";
 
 export default function Home() {
+  const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    // 解析 URL 的查询参数
+    const urlParams = new URLSearchParams(window.location.search);
+    const source = urlParams.get("source");
+
+    if (source === "external") {
+      console.log("PWA opened from external link");
+      // 处理外部链接
+      // 确保在处理外部链接时正确引导用户
+
+      // 设置欢迎消息
+      setMessage("欢迎从外部链接打开我们的 PWA 应用！");
+      // 这里可以添加统计逻辑，例如发送请求到统计服务器
+      // fetch('https://your-analytics-server.com/track', { method: 'POST', body: JSON.stringify({ event: 'external_open' }) });
+    }
+  }, []);
+
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
       <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
@@ -16,6 +36,7 @@ export default function Home() {
           height={38}
           priority
         />
+        <p>{message}</p> {/* 显示欢迎消息 */}
         <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
           <li className="mb-2">
             Get started by editing{" "}
