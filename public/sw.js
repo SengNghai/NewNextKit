@@ -64,7 +64,7 @@ const initializeGlobalData = async () => {
         const clients = await self.clients.matchAll();
         clients.forEach(client => {
             client.postMessage({
-                type: 'GLOBAL_DATA_INITIALIZE',
+                type: 'GLOBAL_DATA_INITIALIZE', // 添加 type 类型
                 data: globalData
             });
         });
@@ -90,7 +90,7 @@ const fetchAndCheckData = async () => {
             const clients = await self.clients.matchAll();
             clients.forEach(client => {
                 client.postMessage({
-                    type: 'GLOBAL_DATA_UPDATE',
+                    type: 'GLOBAL_DATA_UPDATE', // 添加 type 类型
                     data: globalData
                 });
             });
@@ -99,6 +99,33 @@ const fetchAndCheckData = async () => {
         }
     } catch (error) {
         console.error('Error fetching data:', error);
+    }
+};
+
+// 实现后台同步的函数
+const syncData = async () => {
+    console.log('Executing syncData function'); // 添加调试日志
+    // 使用 API_URL 接口来同步全局数据
+    try {
+        const response = await fetch(API_URL);
+        if (response.status === 200) {
+            globalData = await response.json();
+            console.log("实现后台同步的函数 Data synced successfully:", globalData);
+            sendNotification(globalData); // 实现后台同步的后发送通知
+
+            // 发送全局数据更新到客户端，并添加 type 类型
+            const clients = await self.clients.matchAll();
+            clients.forEach(client => {
+                client.postMessage({
+                    type: 'GLOBAL_DATA_UPDATE', // 添加 type 类型
+                    data: globalData
+                });
+            });
+        } else {
+            console.warn('Empty response data');
+        }
+    } catch (error) {
+        console.error('Error syncing data:', error);
     }
 };
 
@@ -219,25 +246,6 @@ self.addEventListener('sync', (event) => {
         event.waitUntil(syncData());
     }
 });
-
-// 实现后台同步的函数
-const syncData = async () => {
-    console.log('Executing syncData function'); // 添加调试日志
-    // 使用 API_URL 接口来同步全局数据
-    try {
-        const response = await fetch(API_URL);
-        if (response.status === 200) {
-            globalData = await response.json();
-            console.log("实现后台同步的函数 Data synced successfully:", globalData);
-            sendNotification(globalData); // 实现后台同步的后发送通知
-        } else {
-            console.warn('Empty response data');
-        }
-    } catch (error) {
-        console.error('Error syncing data:', error);
-    }
-};
-
 
 // 设置定期检查更新的间隔
 setInterval(checkForUpdates, 60 * 60 * 1000); // 每小时检查一次
