@@ -1,28 +1,13 @@
+import { useCurrentDomain } from '~/hooks/useCurrentDomain'; // 根据你的文件结构调整路径
 
-import { useEffect, useState } from "react";
+const ClientCurrentDomain = () => {
+  const currentDomain = useCurrentDomain();
 
-export default function ClientCurrentDomain() {
-    const [currentDomain, setCurrentDomain] = useState<string>('');
-    useEffect(() => {
+  return (
+    <div>
+      <h1>当前域名是: {currentDomain}</h1>
+    </div>
+  );
+};
 
-        const fetchDomain = async () => {
-            try {
-                const res = await fetch('/api/domain');
-                const {currentDomain } = await res.json();
-                console.log(currentDomain);
-                setCurrentDomain(currentDomain);
-            } catch (error) {
-                console.log(error);
-            }
-        }
-        fetchDomain();
-        
-    }, [])
-    return (
-        <div>
-            <h1>当前域名是: {currentDomain}</h1>
-        </div>
-    );
-}
-
-
+export default ClientCurrentDomain;

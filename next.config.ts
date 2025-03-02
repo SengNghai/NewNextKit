@@ -1,5 +1,6 @@
 import { execSync } from 'child_process';
 import type { NextConfig } from 'next';
+import { Inter } from 'next/font/google';
 
 // 运行生成版本号的脚本
 if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'development') {
@@ -25,6 +26,15 @@ const nextConfig: NextConfig = {
           {
             key: 'Referrer-Policy',
             value: 'strict-origin-when-cross-origin',
+          },
+        ],
+      },
+      {
+        source: '/_next/static/media/:path*',
+        headers: [
+          {
+            key: 'Link',
+            value: `</_next/static/media/:path*>; rel=preload; as=font; type="font/woff2"; crossorigin="anonymous"`,
           },
         ],
       },
