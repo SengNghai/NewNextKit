@@ -244,11 +244,4 @@ const syncData = async () => {
 // 设置定期检查更新的间隔
 setInterval(checkForUpdates, 60 * 60 * 1000); // 每小时检查一次
 
-// 在 Service Worker 注册成功后触发后台同步事件
-navigator.serviceWorker.ready.then(registration => {
-    return registration.sync.register('sync-data').then(() => {
-        console.log('Background sync registered successfully');
-    }).catch(error => {
-        console.error('Background sync registration failed:', error);
-    });
-});
+
