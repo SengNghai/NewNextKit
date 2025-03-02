@@ -40,17 +40,65 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 ## 清理旧的服务工作线程
 ```shell
 手动清理旧的服务工作线程可以确保新的 service worker 正常激活：
-
 打开浏览器的开发者工具（通常按 F12 或 Ctrl+Shift+I）。
-
 进入 Application 选项卡。
-
 在左侧导航栏中找到 Service Workers。
-
 点击 Unregister 按钮，注销旧的服务工作线程。
-
 通过这些步骤，你应该能够在 Next.js15.x 项目中全局处理服务工作线程的问题，并确保它在更新时能够正常工作。如果你遇到任何问题或需要进一步的帮助，请随时告诉我！
 ```
 
 # 通过外部连接来打开我的 PWA
 - 是的，你完全可以使用 http://localhost:3000/?source=external 这样的链接来打开你的 PWA 应用。通过在 URL 中添加查询参数 ?source=external，你可以检测这个参数并根据其值执行特定的逻辑。
+
+
+## shadcn/ui
+- (docs)[https://www.shadcn-ui.cn/docs/react-19]
+x
+以下是一个使用 shadcn/ui 实现类似功能的示例代码
+```tsx
+import { List, SwipeAction } from 'shadcn-ui';
+
+const leftActions = [
+  {
+    key: 'pin',
+    text: '置顶',
+    color: 'primary',
+  },
+];
+
+const rightActions = [
+  {
+    key: 'unsubscribe',
+    text: '取消关注',
+    color: 'light',
+  },
+  {
+    key: 'mute',
+    text: '免打扰',
+    color: 'warning',
+  },
+  {
+    key: 'delete',
+    text: '删除',
+    color: 'danger',
+  },
+];
+
+const items = ['A', 'B', 'C'];
+
+const MyComponent = () => (
+  <List>
+    {items.map(item => (
+      <SwipeAction
+        key={item}
+        leftActions={leftActions}
+        rightActions={rightActions}
+      >
+        <List.Item>{item}</List.Item>
+      </SwipeAction>
+    ))}
+  </List>
+);
+
+export default MyComponent;
+```
