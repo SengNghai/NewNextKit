@@ -3,7 +3,7 @@ import type { NextConfig } from 'next';
 
 // 运行生成版本号的脚本
 if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'development') {
-  execSync('node generate-version.js');
+  execSync('node generate-version.cjs');
 }
 
 const nextConfig: NextConfig = {
