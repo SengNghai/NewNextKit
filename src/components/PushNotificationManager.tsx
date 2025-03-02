@@ -4,10 +4,11 @@ import {
   unsubscribeUser,
 } from "~/app/actions";
 import { urlBase64ToUint8Array } from "~/utils/common";
-import useServiceWorker from "~/hooks/useServiceWorker";
+// import useServiceWorker from "~/hooks/useServiceWorker";
 
 export default function PushNotificationManager() {
-  const { subscription, setSubscription, globalData } = useServiceWorker();
+  // const { subscription, setSubscription, globalData } = useServiceWorker();
+  const [subscription, setSubscription] = useState<PushSubscription | null>(null);
   const [isSupported, setIsSupported] = useState<boolean>(false);
   const [message, setMessage] = useState<string>("");
 
@@ -31,18 +32,17 @@ export default function PushNotificationManager() {
     padding: "8px 16px",
   };
 
-  useEffect(() => {
-    console.log("globalData", globalData);
-  }, [globalData])
+  // useEffect(() => {
+  //   console.log("globalData", globalData);
+  // }, [globalData])
 
   useEffect(() => {
     if ("serviceWorker" in navigator && "PushManager" in window) {
       setIsSupported(true);
-      // registerServiceWorker();
+      registerServiceWorker();
     }
   }, []);
 
-  /*
   async function registerServiceWorker() {
     const registration = await navigator.serviceWorker.register("/sw.js", {
       scope: "/",
@@ -51,7 +51,6 @@ export default function PushNotificationManager() {
     const sub = await registration.pushManager.getSubscription();
     setSubscription(sub);
   }
-  */
 
   // 订阅
   async function subscribeToPush() {
@@ -164,7 +163,7 @@ export default function PushNotificationManager() {
           borderRadius: "8px",
         }}
       >
-        <h1 style={{ color: "#243ef3", fontWeight: "bold" }}>全局API配置文件数据：{JSON.stringify(globalData)}</h1>
+        {/* <h1 style={{ color: "#243ef3", fontWeight: "bold" }}>全局API配置文件数据：{JSON.stringify(globalData)}</h1> */}
         <h1 style={{ color: "green", fontWeight: "bold" }}>当前时间：{currentTimestamp}</h1>
         <h2 style={{ color: "green", fontWeight: "bold" }}>Subscription: </h2>
         <code style={{ color: "red" }}>

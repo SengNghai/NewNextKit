@@ -1,14 +1,15 @@
 import { execSync } from 'child_process';
 import type { NextConfig } from 'next';
 
-// 运行生成版本号的脚本
+// 运行生成版本号和加密脚本
 if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'development') {
   execSync('node generate-version.cjs');
 }
 
+
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  swcMinify: true,
   async headers() {
     return [
       {
