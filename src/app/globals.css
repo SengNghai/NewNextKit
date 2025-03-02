@@ -25,3 +25,13 @@ body {
 .other {
   font-size: 32px !important;
 }
+
+.image-logo {
+  width: 180px;
+  height: 38px;
+}
+
+.image-logomark {
+  width: 20px;
+  height: 20px;
+}
