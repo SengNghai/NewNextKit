@@ -3,6 +3,7 @@ importScripts('/version.js'); // 导入版本号
 const CACHE_NAME = `my-cache-v${self.PWA_VERSION}`; // 使用版本号命名缓存
 const API_URL = '/api/domain'; // API 接口 URL
 let intervalId; // 启动定时器定期检查API接口
+let unreadCount = 0; // 未读消息数量
 
 // 拦截 push 事件
 self.addEventListener('push', event => {
@@ -21,6 +22,15 @@ self.addEventListener('push', event => {
                 url: data.url,
             },
         };
+        // 增加未读消息数量
+        unreadCount += data.count || 1;
+        // 设置徽章数字
+        navigator.setAppBadge(unreadCount).catch((error) => {
+            console.error('设置徽章失败:', error);
+        });
+
+        console.log("设置徽章数字", unreadCount);
+        
         event.waitUntil(self.registration.showNotification(data.title, options));
     }
 });
@@ -50,9 +60,14 @@ self.addEventListener('notificationclick', event => {
             })
         );
     }
+    // 清除徽章
+    navigator.clearAppBadge().catch((error) => {
+        console.error('清除徽章失败:', error);
+    });
+
+    // 重置未读消息数量
+    unreadCount = 0;
 });
-
-
 
 // 定期检查 API 接口数据是否发生变化
 const fetchAndCheckData = async () => {
@@ -62,13 +77,17 @@ const fetchAndCheckData = async () => {
 
         if (dataHasChanged(data)) {
             sendNotification(data);
+            // 增加未读消息数量
+            unreadCount += data.count || 1;
+            // 设置徽章数字
+            navigator.setAppBadge(unreadCount).catch((error) => {
+                console.error('设置徽章失败:', error);
+            });
         }
     } catch (error) {
         console.error('Error fetching data:', error);
     }
-
 };
-
 
 // 检查数据是否发生变化的函数
 const dataHasChanged = (data) => {
@@ -82,12 +101,7 @@ self.addEventListener('install', event => {
     console.log('Service Worker installing.');
     self.skipWaiting(); // 立即激活新的 service worker
     console.log("立即激活新的 service worker");
-
-    // 启动定时器定期检查API接口
-    intervalId = setInterval(fetchAndCheckData, 5 * 60 * 1000);
-    // intervalId = setInterval(fetchAndCheckData, 1000);
 });
-
 
 // 激活 service worker 时触发的事件
 self.addEventListener('activate', event => {
@@ -104,8 +118,10 @@ self.addEventListener('activate', event => {
             );
         }).then(() => self.clients.claim())
     );
-});
 
+    // 启动定时器定期检查API接口
+    intervalId = setInterval(fetchAndCheckData, 5 * 60 * 1000);
+});
 
 // 拦截网络请求
 self.addEventListener('fetch', event => {
@@ -122,16 +138,16 @@ self.addEventListener('fetch', event => {
 const sendNotification = (data) => {
     // 检查通知权限
     if (Notification.permission !== 'granted') {
-      console.warn('No notification permission granted.');
-      return;
+        console.warn('No notification permission granted.');
+        return;
     }
-    
+
     console.log("data", data);
     self.registration.showNotification('Data Updated', {
-      body: 'New data is available!',
-      icon: '/icon.png',
-      data: {
-        url: 'https://your-website.com'
-      }
+        body: 'New data is available!',
+        icon: '/icon.png',
+        data: {
+            url: 'https://your-website.com'
+        }
     });
-  };
+};
