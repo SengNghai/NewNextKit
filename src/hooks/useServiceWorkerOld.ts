@@ -2,7 +2,8 @@ import { useReducer, useEffect, useState } from 'react';
 
 // 定义全局数据的初始状态和类型
 interface GlobalData {
-    currentDomain: string;
+    someField: string;
+    anotherField: number;
     // 根据实际数据结构添加更多字段
 }
 
@@ -35,21 +36,21 @@ interface SyncServiceWorkerRegistration extends ServiceWorkerRegistration {
     };
 }
 
+const API_URL = '/api/domain'; // API 接口 URL
+
 const useServiceWorker = () => {
     const [state, dispatch] = useReducer(globalDataReducer, initialState);
     const [subscription, setSubscription] = useState<PushSubscription | null>(null);
 
-    // 从 Service Worker 获取全局数据的函数
-    const getGlobalDataFromSW = async () => {
-        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-            const messageChannel = new MessageChannel();
-            messageChannel.port1.onmessage = (event) => {
-                const globalData: GlobalData = event.data;
-                dispatch({ type: 'SET_GLOBAL_DATA', payload: globalData });
-                console.log('Received global data from Service Worker:', globalData);
-            };
-
-            navigator.serviceWorker.controller.postMessage({ type: 'GET_GLOBAL_DATA' }, [messageChannel.port2]);
+    // 同步数据的函数
+    const syncData = async () => {
+        try {
+            const response = await fetch(API_URL);
+            const data: GlobalData = await response.json();
+            dispatch({ type: 'SET_GLOBAL_DATA', payload: data });
+            console.log('Data synced successfully:', data);
+        } catch (error) {
+            console.error('Error syncing data:', error);
         }
     };
 
@@ -91,7 +92,7 @@ const useServiceWorker = () => {
                 if (syncRegistration.sync) {
                     await syncRegistration.sync.register('sync-data');
                     console.log('Background sync registered successfully');
-                    getGlobalDataFromSW(); // 从 Service Worker 获取全局数据
+                    syncData(); // 初始同步数据
                 } else {
                     console.warn('Background sync not supported');
                 }
@@ -121,6 +122,7 @@ const useServiceWorker = () => {
             });
         }
     }, []);
+
 
     return { subscription, globalData: state.data, setSubscription };
 };

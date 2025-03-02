@@ -25,7 +25,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <meta name="apple-mobile-web-app-title" content="NewNextKit" />
-      <link rel="preload" href="/next.svg" as="image" />
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

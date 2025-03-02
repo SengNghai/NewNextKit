@@ -5,7 +5,7 @@ const API_URL = '/api/domain'; // API 接口 URL
 const GLOBAL_DATA_CACHE = 'global-data-cache';
 let intervalId; // 启动定时器定期检查API接口
 let unreadCount = 0; // 未读消息数量
-let globalData = { "currentDomain": "http://localhost:3000", "anotherField": 123 }; // 用于存储全局数据
+let globalData = {}; // 用于存储全局数据
 
 // 检查数据是否发生变化的函数
 const dataHasChanged = (data) => {
@@ -50,8 +50,10 @@ const storeGlobalData = async (data) => {
 
 // 初始化全局数据并发送到前端
 const initializeGlobalData = async () => {
+    console.log("初始化全局数据并发送到前端");
+    
     try {
-        globalData = await getStoredGlobalData() || globalData;
+        globalData = await getStoredGlobalData() || {};
 
         if (Object.keys(globalData).length === 0) {
             const response = await fetch(API_URL);
@@ -78,6 +80,7 @@ const fetchAndCheckData = async () => {
     try {
         const response = await fetch(API_URL);
         const data = await response.json();
+
         if (dataHasChanged(data)) {
             globalData = data; // 更新全局数据
             await storeGlobalData(globalData); // 更新 Cache Storage
@@ -94,8 +97,6 @@ const fetchAndCheckData = async () => {
                     data: globalData
                 });
             });
-
-            console.log("接口数据是否发生变化--接口数据--后:", data);
         }
     } catch (error) {
         console.error('Error fetching data:', error);
@@ -104,6 +105,8 @@ const fetchAndCheckData = async () => {
 
 // 定期检查更新
 const checkForUpdates = async () => {
+    importScripts('/version.js'); // 动态导入版本号
+    const response = await fetch('/version.js');
     if (self.PWA_VERSION !== '2025.03.02.161654') { // 设定版本号对比逻辑
         self.skipWaiting(); // 跳过等待，立即激活新的 Service Worker
     }
@@ -111,7 +114,8 @@ const checkForUpdates = async () => {
 
 // 启动定时器定期检查API接口
 const startInterval = () => {
-    intervalId = setInterval(fetchAndCheckData, 5 * 60 * 1000); // 每 5 分钟检查一次
+    // intervalId = setInterval(fetchAndCheckData, 5 * 60 * 1000); // 每 5 分钟检查一次
+    intervalId = setInterval(fetchAndCheckData, 1000); // 每 5 分钟检查一次
 };
 
 // 清除徽章
@@ -212,39 +216,5 @@ self.addEventListener('fetch', (event) => {
     }
 });
 
-// 实现后台同步
-self.addEventListener('sync', (event) => {
-    console.log('Sync event triggered:', event.tag); // 添加调试日志
-    if (event.tag === 'sync-data') {
-        event.waitUntil(syncData());
-    }
-});
-
-// 实现后台同步的函数
-const syncData = async () => {
-    console.log('Executing syncData function'); // 添加调试日志
-    // 使用 API_URL 接口来同步全局数据
-    try {
-        const response = await fetch(API_URL);
-        if (response.status === 200) {
-            globalData = await response.json();
-            console.log("实现后台同步的函数 Data synced successfully:", globalData);
-            sendNotification(globalData); // 实现后台同步的后发送通知
-        } else {
-            console.warn('Empty response data');
-        }
-    } catch (error) {
-        console.error('Error syncing data:', error);
-    }
-};
-
-
 // 设置定期检查更新的间隔
 setInterval(checkForUpdates, 60 * 60 * 1000); // 每小时检查一次
-
-// 处理来自客户端的消息
-self.addEventListener('message', (event) => {
-    if (event.data && event.data.type === 'GET_GLOBAL_DATA') {
-        event.ports[0].postMessage(globalData);
-    }
-});

@@ -4,13 +4,11 @@ import {
   unsubscribeUser,
 } from "~/app/actions";
 import { urlBase64ToUint8Array } from "~/utils/common";
-// import io from 'socket.io-client';
 import useServiceWorker from "~/hooks/useServiceWorker";
 
 export default function PushNotificationManager() {
   const { subscription, setSubscription, globalData } = useServiceWorker();
   const [isSupported, setIsSupported] = useState<boolean>(false);
-  // const [subscription, setSubscription] = useState<PushSubscription | null>(null);
   const [message, setMessage] = useState<string>("");
 
   const [notifyEndpoint, setNotifyEndpoint] = useState<string>("");
@@ -44,6 +42,7 @@ export default function PushNotificationManager() {
     }
   }, []);
 
+  /*
   async function registerServiceWorker() {
     const registration = await navigator.serviceWorker.register("/sw.js", {
       scope: "/",
@@ -52,6 +51,7 @@ export default function PushNotificationManager() {
     const sub = await registration.pushManager.getSubscription();
     setSubscription(sub);
   }
+  */
 
   // 订阅
   async function subscribeToPush() {
