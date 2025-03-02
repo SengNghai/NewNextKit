@@ -243,5 +243,3 @@ const syncData = async () => {
 
 // 设置定期检查更新的间隔
 setInterval(checkForUpdates, 60 * 60 * 1000); // 每小时检查一次
-
-

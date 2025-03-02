@@ -9,13 +9,10 @@ import NetworkedStatus from "~/components/NetworkedStatus";
 import APIResponseTime from "~/components/APIResponseTime";
 import { PWA_VERSION } from '~/utils/version';
 import { useCurrentDomain } from "~/hooks/useCurrentDomain";
-import useServiceWorkerData from "~/hooks/useServiceWorkerData";
-
 
 export default function Home() {
   const [message, setMessage] = useState("");
   const currentDomain = useCurrentDomain();
-  const globalData = useServiceWorkerData();
 
   useEffect(() => {
     // 解析 URL 的查询参数
@@ -54,15 +51,6 @@ export default function Home() {
         < NetworkedStatus />
         {/* API 请求时间 */}
         < APIResponseTime />
-        {/* API 请求时间 */}
-        <div>
-          <h1>Global Data</h1>
-          {globalData ? (
-            <pre>{JSON.stringify(globalData, null, 2)}</pre>
-          ) : (
-            <p>Loading data...</p>
-          )}
-        </div>
         {/* 其它 */}
         <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
           <li className="mb-2">

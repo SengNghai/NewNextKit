@@ -8,7 +8,7 @@ import { urlBase64ToUint8Array } from "~/utils/common";
 import useServiceWorker from "~/hooks/useServiceWorker";
 
 export default function PushNotificationManager() {
-  const { subscription, setSubscription } = useServiceWorker();
+  const { subscription, setSubscription, globalData } = useServiceWorker();
   const [isSupported, setIsSupported] = useState<boolean>(false);
   // const [subscription, setSubscription] = useState<PushSubscription | null>(null);
   const [message, setMessage] = useState<string>("");
@@ -32,6 +32,10 @@ export default function PushNotificationManager() {
     borderRadius: "8px",
     padding: "8px 16px",
   };
+
+  useEffect(() => {
+    console.log("globalData", globalData);
+  }, [globalData])
 
   useEffect(() => {
     if ("serviceWorker" in navigator && "PushManager" in window) {
@@ -160,6 +164,7 @@ export default function PushNotificationManager() {
           borderRadius: "8px",
         }}
       >
+        <h1 style={{ color: "#243ef3", fontWeight: "bold" }}>全局API配置文件数据：{JSON.stringify(globalData)}</h1>
         <h1 style={{ color: "green", fontWeight: "bold" }}>当前时间：{currentTimestamp}</h1>
         <h2 style={{ color: "green", fontWeight: "bold" }}>Subscription: </h2>
         <code style={{ color: "red" }}>
