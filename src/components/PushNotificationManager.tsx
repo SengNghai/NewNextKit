@@ -1,25 +1,22 @@
 import { useEffect, useState } from "react";
 import {
-  // sendNotification,
   subscribeUser,
   unsubscribeUser,
 } from "~/app/actions";
 import { urlBase64ToUint8Array } from "~/utils/common";
+// import useServiceWorker from "~/hooks/useServiceWorker";
 
 export default function PushNotificationManager() {
+  // const { subscription, setSubscription, globalData } = useServiceWorker();
+  const [subscription, setSubscription] = useState<PushSubscription | null>(null);
   const [isSupported, setIsSupported] = useState<boolean>(false);
-  const [subscription, setSubscription] = useState<PushSubscription | null>(
-    null,
-  );
   const [message, setMessage] = useState<string>("");
 
   const [notifyEndpoint, setNotifyEndpoint] = useState<string>("");
   const url = `/dashboard`;
-  // 获取当前日期时间作为版本号
-const now = new Date();
-const currentTimestamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
 
-
+  const now = new Date();
+  const currentTimestamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
 
   const styles = {
     backgroundColor: "blue",
@@ -34,6 +31,10 @@ const currentTimestamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padS
     borderRadius: "8px",
     padding: "8px 16px",
   };
+
+  // useEffect(() => {
+  //   console.log("globalData", globalData);
+  // }, [globalData])
 
   useEffect(() => {
     if ("serviceWorker" in navigator && "PushManager" in window) {
@@ -51,6 +52,7 @@ const currentTimestamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padS
     setSubscription(sub);
   }
 
+  // 订阅
   async function subscribeToPush() {
     const registration = await navigator.serviceWorker.ready;
     const sub = await registration.pushManager.subscribe({
@@ -61,19 +63,25 @@ const currentTimestamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padS
     });
     setSubscription(sub);
     const serializedSub = JSON.parse(JSON.stringify(sub));
-    
     await subscribeUser(serializedSub);
 
-    // 使用 API 订阅
-    /*
-    const res = await fetch('/api/subscribe', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(serializedSub),
-    });
-    const data = await res.json();
-    console.log(data);
-    */
+    // 使用 WebSocket 订阅
+    // const socket = io('http://localhost:3000', {
+    //   path: '/api/socket',
+    // });
+
+    // socket.on('connect', () => {
+    //   console.log('Connected to WebSocket');
+    //   socket.emit('subscribe', serializedSub);
+    // });
+
+    // socket.on('message', (data) => {
+    //   console.log('Message from server:', data);
+    // });
+
+    // socket.on('disconnect', () => {
+    //   console.log('Disconnected from WebSocket');
+    // });
   }
 
   async function unsubscribeFromPush() {
@@ -81,34 +89,10 @@ const currentTimestamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padS
     setSubscription(null);
     setNotifyEndpoint("");
     await unsubscribeUser();
-    // 使用 API 取消订阅
-    /*
-    const serializedSub = JSON.parse(JSON.stringify(subscription))
-    const res = await fetch('/api/unsubscribe', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ endpoint: serializedSub.endpoint }),
-    });
-    const data = await res.json();
-    console.log(data);
-    */
   }
 
   async function sendTestNotification() {
     if (subscription) {
-      // 第一种方式是直接调用
-      /*
-      const result = await sendNotification({ message, url });
-      if (!result.success) {
-        alert(result.error);
-      }
-      */
-
-
-      /**
-       * 第二种方式： 使用 API 发送通知
-       * 传递 subscription、message 和 url
-       */
       const res = await fetch('/api/notify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -123,8 +107,6 @@ const currentTimestamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padS
       setMessage("");
     }
   }
-
-
 
   useEffect(() => {
     if (subscription) {
@@ -181,6 +163,7 @@ const currentTimestamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padS
           borderRadius: "8px",
         }}
       >
+        {/* <h1 style={{ color: "#243ef3", fontWeight: "bold" }}>全局API配置文件数据：{JSON.stringify(globalData)}</h1> */}
         <h1 style={{ color: "green", fontWeight: "bold" }}>当前时间：{currentTimestamp}</h1>
         <h2 style={{ color: "green", fontWeight: "bold" }}>Subscription: </h2>
         <code style={{ color: "red" }}>
