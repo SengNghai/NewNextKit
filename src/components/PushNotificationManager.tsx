@@ -4,11 +4,13 @@ import {
   unsubscribeUser,
 } from "~/app/actions";
 import { urlBase64ToUint8Array } from "~/utils/common";
-import io from 'socket.io-client';
+// import io from 'socket.io-client';
+import useServiceWorker from "~/hooks/useServiceWorker";
 
 export default function PushNotificationManager() {
+  const { subscription, setSubscription } = useServiceWorker();
   const [isSupported, setIsSupported] = useState<boolean>(false);
-  const [subscription, setSubscription] = useState<PushSubscription | null>(null);
+  // const [subscription, setSubscription] = useState<PushSubscription | null>(null);
   const [message, setMessage] = useState<string>("");
 
   const [notifyEndpoint, setNotifyEndpoint] = useState<string>("");
@@ -34,7 +36,7 @@ export default function PushNotificationManager() {
   useEffect(() => {
     if ("serviceWorker" in navigator && "PushManager" in window) {
       setIsSupported(true);
-      registerServiceWorker();
+      // registerServiceWorker();
     }
   }, []);
 

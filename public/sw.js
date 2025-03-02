@@ -2,11 +2,132 @@ importScripts('/version.js'); // 导入版本号
 
 const CACHE_NAME = `my-cache-v${self.PWA_VERSION}`; // 使用版本号命名缓存
 const API_URL = '/api/domain'; // API 接口 URL
+const GLOBAL_DATA_CACHE = 'global-data-cache';
 let intervalId; // 启动定时器定期检查API接口
 let unreadCount = 0; // 未读消息数量
+let globalData = {}; // 用于存储全局数据
 
-// 拦截 push 事件
-self.addEventListener('push', event => {
+// 检查数据是否发生变化的函数
+const dataHasChanged = (data) => {
+    return JSON.stringify(data) !== JSON.stringify(globalData);
+};
+
+// 发送通知
+const sendNotification = (data) => {
+    if (Notification.permission !== 'granted') {
+        console.warn('No notification permission granted.');
+        return;
+    }
+
+    console.log("data", data);
+    self.registration.showNotification('Data Updated', {
+        body: 'New data is available!',
+        icon: '/icon.png',
+        data: {
+            url: 'https://your-website.com'
+        }
+    });
+};
+
+// 从 Cache Storage 获取全局数据
+const getStoredGlobalData = async () => {
+    const cache = await caches.open(GLOBAL_DATA_CACHE);
+    const response = await cache.match('globalData');
+    if (response) {
+        const data = await response.json();
+        console.log("Retrieved global data from cache:", data);
+        return data;
+    }
+    return null;
+};
+
+// 将全局数据存储到 Cache Storage
+const storeGlobalData = async (data) => {
+    const cache = await caches.open(GLOBAL_DATA_CACHE);
+    await cache.put('globalData', new Response(JSON.stringify(data)));
+    console.log("Stored global data to cache:", data);
+};
+
+// 初始化全局数据并发送到前端
+const initializeGlobalData = async () => {
+    console.log("初始化全局数据并发送到前端");
+    
+    try {
+        globalData = await getStoredGlobalData() || {};
+
+        if (Object.keys(globalData).length === 0) {
+            const response = await fetch(API_URL);
+            globalData = await response.json();
+            await storeGlobalData(globalData);
+        }
+
+        console.log("Initializing global data:", globalData);
+
+        const clients = await self.clients.matchAll();
+        clients.forEach(client => {
+            client.postMessage({
+                type: 'GLOBAL_DATA_INITIALIZE',
+                data: globalData
+            });
+        });
+    } catch (error) {
+        console.error('Error initializing global data:', error);
+    }
+};
+
+// 定期检查 API 接口数据是否发生变化
+const fetchAndCheckData = async () => {
+    try {
+        const response = await fetch(API_URL);
+        const data = await response.json();
+
+        if (dataHasChanged(data)) {
+            globalData = data; // 更新全局数据
+            await storeGlobalData(globalData); // 更新 Cache Storage
+            sendNotification(data);
+            unreadCount += data.count || 1;
+            navigator.setAppBadge(unreadCount).catch((error) => {
+                console.error('设置徽章失败:', error);
+            });
+
+            const clients = await self.clients.matchAll();
+            clients.forEach(client => {
+                client.postMessage({
+                    type: 'GLOBAL_DATA_UPDATE',
+                    data: globalData
+                });
+            });
+        }
+    } catch (error) {
+        console.error('Error fetching data:', error);
+    }
+};
+
+// 定期检查更新
+const checkForUpdates = async () => {
+    importScripts('/version.js'); // 动态导入版本号
+    const response = await fetch('/version.js');
+    if (self.PWA_VERSION !== '2025.03.02.161654') { // 设定版本号对比逻辑
+        self.skipWaiting(); // 跳过等待，立即激活新的 Service Worker
+    }
+};
+
+// 启动定时器定期检查API接口
+const startInterval = () => {
+    intervalId = setInterval(fetchAndCheckData, 5 * 60 * 1000); // 每 5 分钟检查一次
+};
+
+// 清除徽章
+const clearBadge = async () => {
+    try {
+        await navigator.clearAppBadge();
+    } catch (error) {
+        console.error('清除徽章失败:', error);
+    }
+};
+
+// 处理 push 事件
+self.addEventListener('push', (event) => {
     if (event.data) {
         const data = event.data.json();
         console.log("data", data);
@@ -22,109 +143,69 @@ self.addEventListener('push', event => {
                 url: data.url,
             },
         };
-        // 增加未读消息数量
         unreadCount += data.count || 1;
-        // 设置徽章数字
         navigator.setAppBadge(unreadCount).catch((error) => {
             console.error('设置徽章失败:', error);
         });
 
         console.log("设置徽章数字", unreadCount);
-        
+
         event.waitUntil(self.registration.showNotification(data.title, options));
     }
 });
 
-// 拦截通知点击事件
-self.addEventListener('notificationclick', event => {
+// 处理 notificationclick 事件
+self.addEventListener('notificationclick', (event) => {
     console.log('Notification click received.', event);
-    event.notification.close(); // 关闭通知
+    event.notification.close();
 
-    if (event) {
-        const { url } = event.notification.data; // 从通知数据中获取 URL
+    const { url } = event.notification.data;
 
-        event.waitUntil(
-            clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
-                for (let i = 0; i < windowClients.length; i++) {
-                    const client = windowClients[i];
-                    // 检查 PWA 应用窗口是否已经打开
-                    if (client.url.includes(self.location.origin) && 'navigate' in client) {
-                        client.navigate(url); // 在当前 PWA 应用窗口中导航到指定 URL
-                        return client.focus(); // 将窗口聚焦
-                    }
+    event.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+            for (let client of windowClients) {
+                if (client.url.includes(self.location.origin) && 'navigate' in client) {
+                    client.navigate(url);
+                    return client.focus();
                 }
-                // 如果没有找到匹配窗口，打开新窗口
-                if (clients.openWindow) {
-                    return clients.openWindow(url);
-                }
-            })
-        );
-    }
-    // 清除徽章
-    navigator.clearAppBadge().catch((error) => {
-        console.error('清除徽章失败:', error);
-    });
+            }
+            if (clients.openWindow) {
+                return clients.openWindow(url);
+            }
+        })
+    );
 
-    // 重置未读消息数量
+    clearBadge();
     unreadCount = 0;
 });
 
-// 定期检查 API 接口数据是否发生变化
-const fetchAndCheckData = async () => {
-    try {
-        const response = await fetch(API_URL);
-        const data = await response.json();
-
-        if (dataHasChanged(data)) {
-            sendNotification(data);
-            // 增加未读消息数量
-            unreadCount += data.count || 1;
-            // 设置徽章数字
-            navigator.setAppBadge(unreadCount).catch((error) => {
-                console.error('设置徽章失败:', error);
-            });
-        }
-    } catch (error) {
-        console.error('Error fetching data:', error);
-    }
-};
-
-// 检查数据是否发生变化的函数
-const dataHasChanged = (data) => {
-    // 检查数据是否发生变化的逻辑
-    // 返回 true 表示数据发生变化
-    return true;
-};
-
-// 安装 service worker 时触发的事件
-self.addEventListener('install', event => {
-    console.log('Service Worker installing.');
-    self.skipWaiting(); // 立即激活新的 service worker
-    console.log("立即激活新的 service worker");
-});
-
-// 激活 service worker 时触发的事件
-self.addEventListener('activate', event => {
-    console.log('Service Worker activating.');
+// 处理 activate 事件
+self.addEventListener('activate', (event) => {
+    console.log('Service Worker activating======.');
     event.waitUntil(
-        caches.keys().then(cacheNames => {
-            return Promise.all(
-                cacheNames.map(cacheName => {
-                    // 删除旧缓存
+        (async () => {
+            const cacheNames = await caches.keys();
+            await Promise.all(
+                cacheNames.map((cacheName) => {
                     if (cacheName !== CACHE_NAME) {
                         return caches.delete(cacheName);
                     }
                 })
             );
-        }).then(() => self.clients.claim())
-    );
+            await self.clients.claim();
 
-    // 启动定时器定期检查API接口
-    intervalId = setInterval(fetchAndCheckData, 5 * 60 * 1000);
+            await initializeGlobalData(); // 在激活时获取全局数据并设置
+            startInterval(); // 启动定时器定期检查API接口
+        })()
+    );
+    // 调试日志，确保事件处理程序已执行
+    console.log('activate 事件处理程序已执行');
+    // 初始化全局数据并发送到前端
+    initializeGlobalData();
 });
 
-// 拦截网络请求
-self.addEventListener('fetch', event => {
+// 处理 fetch 事件
+self.addEventListener('fetch', (event) => {
     if (event.request.mode === 'navigate') {
         event.respondWith(
             fetch(event.request).catch(() => {
@@ -134,20 +215,40 @@ self.addEventListener('fetch', event => {
     }
 });
 
-// 发送通知
-const sendNotification = (data) => {
-    // 检查通知权限
-    if (Notification.permission !== 'granted') {
-        console.warn('No notification permission granted.');
-        return;
+// 实现后台同步
+self.addEventListener('sync', (event) => {
+    console.log('Sync event triggered:', event.tag); // 添加调试日志
+    if (event.tag === 'sync-data') {
+        event.waitUntil(syncData());
     }
+});
 
-    console.log("data", data);
-    self.registration.showNotification('Data Updated', {
-        body: 'New data is available!',
-        icon: '/icon.png',
-        data: {
-            url: 'https://your-website.com'
-        }
-    });
+const syncData = async () => {
+    console.log('Executing syncData function'); // 添加调试日志
+    // 使用 API_URL 接口来同步全局数据
+    try {
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            body: JSON.stringify(globalData),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        const result = await response.json();
+        console.log('Data synced successfully:', result);
+    } catch (error) {
+        console.error('Error syncing data:', error);
+    }
 };
+
+// 设置定期检查更新的间隔
+setInterval(checkForUpdates, 60 * 60 * 1000); // 每小时检查一次
+
+// 在 Service Worker 注册成功后触发后台同步事件
+navigator.serviceWorker.ready.then(registration => {
+    return registration.sync.register('sync-data').then(() => {
+        console.log('Background sync registered successfully');
+    }).catch(error => {
+        console.error('Background sync registration failed:', error);
+    });
+});
