@@ -1,5 +1,7 @@
 import { execSync } from 'child_process';
 import type { NextConfig } from 'next';
+import { version } from 'process';
+import packageJson from './package.json';
 
 // 运行生成版本号和加密脚本
 if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'development') {
@@ -7,9 +9,16 @@ if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'developme
 }
 
 
-
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  crossOrigin: 'anonymous',
+  experimental: {
+    cssChunking: true, // default
+  },
+  env: {
+    API_URL_DOMAIN: process.env.API_URL_DOMAIN_DEV,
+    APP_VERSION: packageJson.version,
+  },
   async headers() {
     return [
       {
@@ -60,7 +69,7 @@ const nextConfig: NextConfig = {
   publicRuntimeConfig: {
     isProd: process.env.NODE_ENV === 'production',
   },
-  webpack: (config, { isServer }) => {
+  webpack:  (config, { isServer }) => {
     // 修改 webpack 配置
 
     // 确保在客户端编译时禁用 `fs` 模块
@@ -96,6 +105,7 @@ const nextConfig: NextConfig = {
       ],
     },
   },
+  
 };
 
 export default nextConfig;

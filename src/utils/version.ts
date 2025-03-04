@@ -1,1 +1,1 @@
-export const PWA_VERSION = '2025.03.03.013219';
+export const PWA_VERSION = '2025.03.05.001722';
