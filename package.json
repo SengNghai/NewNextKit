@@ -10,7 +10,6 @@
     "https": "next dev --experimental-https"
   },
   "dependencies": {
-    "crypto": "^1.0.1",
     "fs": "^0.0.1-security",
     "mongoose": "^8.11.0",
     "next": "15.2.0",
@@ -20,7 +19,6 @@
     "react-dom": "^19.0.0",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
-    "terser": "^5.39.0",
     "web-push": "^3.6.7"
   },
   "devDependencies": {

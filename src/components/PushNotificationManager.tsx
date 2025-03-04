@@ -164,6 +164,8 @@ export default function PushNotificationManager() {
         }}
       >
         {/* <h1 style={{ color: "#243ef3", fontWeight: "bold" }}>全局API配置文件数据：{JSON.stringify(globalData)}</h1> */}
+        <h1 style={{ color: "green", fontWeight: "bold" }}>全局API: {process.env.API_URL_DOMAIN}</h1>
+        <h1 style={{ color: "green", fontWeight: "bold" }}>APP_VERSION: {process.env.APP_VERSION}</h1>
         <h1 style={{ color: "green", fontWeight: "bold" }}>当前时间：{currentTimestamp}</h1>
         <h2 style={{ color: "green", fontWeight: "bold" }}>Subscription: </h2>
         <code style={{ color: "red" }}>
