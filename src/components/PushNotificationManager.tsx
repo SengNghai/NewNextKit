@@ -1,13 +1,20 @@
 import { useEffect, useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import {
   subscribeUser,
   unsubscribeUser,
 } from "~/app/actions";
 import { urlBase64ToUint8Array } from "~/utils/common";
-// import useServiceWorker from "~/hooks/useServiceWorker";
+import { RootState } from "~/lib/features/store";
 
 export default function PushNotificationManager() {
-  // const { subscription, setSubscription, globalData } = useServiceWorker();
+  const count = useSelector(
+    (state: { counter: { value: number } }) => state.counter.value,
+  );
+  const globalData = useSelector(
+    (state: RootState) => state.globalData,
+  );
+
   const [subscription, setSubscription] = useState<PushSubscription | null>(null);
   const [isSupported, setIsSupported] = useState<boolean>(false);
   const [message, setMessage] = useState<string>("");
@@ -164,7 +171,7 @@ export default function PushNotificationManager() {
         }}
       >
         {/* <h1 style={{ color: "#243ef3", fontWeight: "bold" }}>全局API配置文件数据：{JSON.stringify(globalData)}</h1> */}
-        <h1 style={{ color: "green", fontWeight: "bold" }}>全局API: {process.env.API_URL_DOMAIN}</h1>
+        <h1 style={{ color: "green", fontWeight: "bold" }}>全局API: {JSON.stringify(globalData)}</h1>
         <h1 style={{ color: "green", fontWeight: "bold" }}>APP_VERSION: {process.env.APP_VERSION}</h1>
         <h1 style={{ color: "green", fontWeight: "bold" }}>当前时间：{currentTimestamp}</h1>
         <h2 style={{ color: "green", fontWeight: "bold" }}>Subscription: </h2>

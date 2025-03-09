@@ -5,6 +5,7 @@ import { Provider } from "react-redux";
 import { store } from "~/lib/features/store";
 import { ServiceWorkerClient } from "~/lib/ServiceWorkerClient";
 import { globalDataSlice } from "~/lib/features/slices/globalData";
+import packageJson from "../../package.json"; // Adjust path to import package.json
 
 export default function StoreProvider({
   children,
@@ -20,7 +21,19 @@ export default function StoreProvider({
         const swClient = ServiceWorkerClient.getInstance();
 
         // 注册 Service Worker
-        await swClient.register("/sw.js");
+        const registration = await swClient.register("/sw.js");
+
+        // 发送参数到 Service Worker
+        const API_DOMAIN = process.env.API_DOMAIN_DEV || "http://localhost:3000";
+        const APP_VERSION = packageJson.version;
+
+        if (registration.active) {
+          registration.active.postMessage({
+            type: "INIT_DATA",
+            payload: { API_DOMAIN, APP_VERSION },
+          });
+          console.log("Sent data to Service Worker:", { API_DOMAIN, APP_VERSION });
+        }
 
         // 触发后台同步
         if ("sync" in ServiceWorkerRegistration.prototype) {
@@ -36,10 +49,7 @@ export default function StoreProvider({
     // 监听 Service Worker 发来的消息
     const handleMessage = (event: MessageEvent) => {
       if (event.data?.type === "GLOBAL_DATA_UPDATE") {
-        console.log(
-          "Received global data from Service Worker:",
-          event.data.data,
-        );
+        console.log("Received global data from Service Worker:", event.data.data);
         // 更新 Redux Store 中的全局数据
         store.dispatch(updateGlobalData(event.data.data));
       }

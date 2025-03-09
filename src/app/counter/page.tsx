@@ -6,6 +6,10 @@ import { Button, Input } from "antd-mobile";
 
 const { increment, decrement } = counterSlice.actions;
 export default function Counter() {
+  const globalData = useSelector(
+    (state) => state,
+  );
+
   const count = useSelector(
     (state: { counter: { value: number } }) => state.counter.value,
   );
@@ -18,6 +22,9 @@ export default function Counter() {
   const handleDecrement = () => {
     dispatch(decrement());
   };
+
+  console.log("globalDataglobalData", globalData);
+  
 
   return (
     <div className={styles.counter}>
@@ -51,6 +58,9 @@ export default function Counter() {
         >
           Decrement
         </Button>
+      </div>
+      <div>
+        {JSON.stringify(globalData && globalData)}
       </div>
     </div>
   );

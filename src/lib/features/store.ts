@@ -27,6 +27,7 @@ const logger = createLogger({
 export const store = configureStore({
   reducer: {
     counter: slices.counterSlice.reducer,
+    globalData: slices.globalDataSlice.reducer,
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(logger),
 });

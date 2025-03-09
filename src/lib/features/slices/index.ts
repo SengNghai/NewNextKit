@@ -1,3 +1,4 @@
 import { counterSlice } from "./counter";
+import { globalDataSlice } from "./globalData";
 
-export { counterSlice };
+export { counterSlice, globalDataSlice };

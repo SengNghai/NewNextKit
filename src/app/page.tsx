@@ -7,7 +7,6 @@ import PushNotificationManager from "../components/PushNotificationManager";
 import ClientCurrentDomain from "~/components/ClientCurrentDomain";
 import NetworkedStatus from "~/components/NetworkedStatus";
 import APIResponseTime from "~/components/APIResponseTime";
-import { PWA_VERSION } from "~/utils/version";
 import { useCurrentDomain } from "~/hooks/useCurrentDomain";
 
 import { Button, JumboTabs } from "antd-mobile";
@@ -48,7 +47,7 @@ export default function Home() {
         />
         {/* 显示欢迎消息 */}
         <p>{message}</p>
-        <p>当前的版本号：{PWA_VERSION}</p>
+        <p>当前的版本号：{process.env.APP_VERSION}</p>
         <div>
           <Button color="primary" fill="solid">
             Solid

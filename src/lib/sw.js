@@ -1,10 +1,37 @@
-importScripts("/version.js"); // 导入版本号
 
-const CACHE_NAME = `my-cache-v${self.PWA_VERSION}`; // 使用版本号命名缓存
-const API_URL = "/api/domain"; // API 接口 URL
+
+let CACHE_NAME = ""; // 缓存名称将在接收 APP_VERSION 后设置
+let GLOBAL_API = ""; // API URL 将基于 API_DOMAIN 设置
 const GLOBAL_DATA_CACHE = "global-data-cache";
+
 let unreadCount = 0; // 未读消息数量
-let globalData = { currentDomain: "http://localhost:3000", anotherField: 123 }; // 用于存储全局数据
+let globalData = {}; // 全局数据初始化为空对象
+
+// 接收来自 StoreProvider.tsx 的消息
+self.addEventListener("message", (event) => {
+  if (event.data?.type === "INIT_DATA") {
+    const { 
+      API_DOMAIN,  // 动态接收的 API 域
+      APP_VERSION  // 动态接收的应用版本号
+     } = event.data.payload;
+
+    // 动态设置全局变量
+    CACHE_NAME = `cache-v${APP_VERSION}`;
+    GLOBAL_API = `${API_DOMAIN}/api/domain`;
+
+    console.log("Service Worker received INIT_DATA:", {
+      CACHE_NAME,
+      API_URL,
+    });
+
+    // 开始初始化全局数据
+    initializeGlobalData();
+  }
+
+  if (event.data?.type === "GET_GLOBAL_DATA") {
+    event.ports[0].postMessage(globalData);
+  }
+});
 
 // 检查数据是否发生变化的函数
 const dataHasChanged = (data) => {
@@ -13,7 +40,6 @@ const dataHasChanged = (data) => {
 
 // 发送通知
 const sendNotification = (data) => {
-  console.table("sendNotification:", data);
   if (Notification.permission === "granted") {
     self.registration.showNotification("Data Updated", {
       body: "New data is available!",
@@ -34,7 +60,7 @@ const getStoredGlobalData = async () => {
     console.log("Retrieved global data from cache:", data);
     return data;
   }
-  return null;
+  return {}; // 默认返回空对象
 };
 
 // 将全局数据存储到 Cache Storage
@@ -46,8 +72,13 @@ const storeGlobalData = async (data) => {
 
 // 初始化全局数据并发送到前端
 const initializeGlobalData = async () => {
+  if (!GLOBAL_API || !CACHE_NAME) {
+    console.warn("API_DOMAIN or APP_VERSION is not set. Initialization skipped.");
+    return;
+  }
+
   try {
-    globalData = (await getStoredGlobalData()) || globalData;
+    globalData = (await getStoredGlobalData()) || {};
 
     if (Object.keys(globalData).length === 0) {
       const response = await fetch(API_URL);
@@ -71,6 +102,11 @@ const initializeGlobalData = async () => {
 
 // 后台同步逻辑
 const syncData = async () => {
+  if (!API_URL) {
+    console.warn("API_URL is not set. Synchronization skipped.");
+    return;
+  }
+
   try {
     const response = await fetch(API_URL);
     const data = await response.json();
@@ -81,7 +117,7 @@ const syncData = async () => {
       // 通知客户端数据更新
       const clients = await self.clients.matchAll();
       clients.forEach((client) =>
-        client.postMessage({ type: "GLOBAL_DATA_UPDATE", data: globalData }),
+        client.postMessage({ type: "GLOBAL_DATA_UPDATE", data: globalData })
       );
 
       // 发送通知
@@ -105,11 +141,10 @@ self.addEventListener("activate", (event) => {
           if (cacheName !== CACHE_NAME) {
             return caches.delete(cacheName);
           }
-        }),
+        })
       );
       await self.clients.claim();
-      await initializeGlobalData(); // 初始化全局数据
-    })(),
+    })()
   );
 });
 
@@ -117,7 +152,7 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("sync", (event) => {
   console.log(`Sync event triggered: ${event.tag}`);
   if (event.tag === "sync-data") {
-    event.waitUntil(syncData()); // 后台同步
+    event.waitUntil(syncData());
   }
 });
 
@@ -149,30 +184,6 @@ self.addEventListener("push", (event) => {
   }
 });
 
-// 处理 notificationclick 事件
-self.addEventListener("notificationclick", (event) => {
-  event.notification.close();
-  const { url } = event.notification.data;
-
-  event.waitUntil(
-    clients
-      .matchAll({ type: "window", includeUncontrolled: true })
-      .then((windowClients) => {
-        for (let client of windowClients) {
-          if (client.url === url && "focus" in client) {
-            return client.focus();
-          }
-        }
-        if (clients.openWindow) {
-          return clients.openWindow(url);
-        }
-      }),
-  );
-
-  unreadCount = 0;
-  navigator.clearAppBadge?.().catch(console.error);
-});
-
 // 在同步或初始化时发送数据到前端
 const sendGlobalDataToClients = async (type, data) => {
   const clients = await self.clients.matchAll();
@@ -180,17 +191,3 @@ const sendGlobalDataToClients = async (type, data) => {
     client.postMessage({ type, data });
   });
 };
-
-// 示例：在同步完成时调用
-self.addEventListener("sync", (event) => {
-  if (event.tag === "sync-data") {
-    event.waitUntil(
-      (async () => {
-        // 数据同步逻辑
-        await fetchAndCheckData();
-        // 同步完成后发送数据给客户端
-        sendGlobalDataToClients("GLOBAL_DATA_UPDATE", globalData);
-      })(),
-    );
-  }
-});
