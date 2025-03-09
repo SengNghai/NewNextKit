@@ -10,6 +10,7 @@ import APIResponseTime from "~/components/APIResponseTime";
 import { useCurrentDomain } from "~/hooks/useCurrentDomain";
 
 import { Button, JumboTabs } from "antd-mobile";
+import Link from "next/link";
 
 export default function Home() {
   const [message, setMessage] = useState("");
@@ -45,6 +46,9 @@ export default function Home() {
           height={38}
           priority
         />
+        <div>
+          <Link href="/mobile">移动端</Link>
+        </div>
         {/* 显示欢迎消息 */}
         <p>{message}</p>
         <p>当前的版本号：{process.env.APP_VERSION}</p>

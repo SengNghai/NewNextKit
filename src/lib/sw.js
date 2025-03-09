@@ -17,7 +17,7 @@ self.addEventListener("message", (event) => {
 
     // 动态设置全局变量
     CACHE_NAME = `cache-v${APP_VERSION}`;
-    GLOBAL_API = `${API_DOMAIN}/api/domain`;
+    GLOBAL_API = API_DOMAIN;
 
     console.log("Service Worker received INIT_DATA:", {
       CACHE_NAME,
