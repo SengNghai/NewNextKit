@@ -10,6 +10,8 @@
     "https": "next dev --experimental-https"
   },
   "dependencies": {
+    "@reduxjs/toolkit": "^2.6.1",
+    "antd-mobile": "^5.38.1",
     "fs": "^0.0.1-security",
     "mongoose": "^8.11.0",
     "next": "15.2.0",
@@ -17,6 +19,7 @@
     "postcss-pxtorem": "^6.1.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-redux": "^9.2.0",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
     "web-push": "^3.6.7"
@@ -27,13 +30,28 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/redux-logger": "^3.0.13",
     "@types/web-push": "^3.6.4",
     "eslint": "^9",
     "eslint-config-next": "15.2.0",
     "javascript-obfuscator": "^4.1.1",
+    "redux-logger": "^3.0.6",
+    "sass": "^1.85.1",
+    "sass-embedded": "^1.85.1",
     "tailwindcss": "^4",
     "ts-node": "^10.9.2",
     "typescript": "^5",
     "uglify-js": "^3.19.3"
-  }
+  },
+  "presets": [
+    [
+      "@babel/preset-env",
+      {
+        "targets": {
+          "chrome": "49",
+          "ios": "10"
+        }
+      }
+    ]
+  ]
 }
