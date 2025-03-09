@@ -24,7 +24,7 @@ export default function StoreProvider({
         const registration = await swClient.register("/sw.js");
 
         // 发送参数到 Service Worker
-        const API_DOMAIN = process.env.API_DOMAIN_DEV || "http://localhost:3000";
+        const API_DOMAIN = process.env.API_DOMAIN;
         const APP_VERSION = packageJson.version;
 
         if (registration.active) {

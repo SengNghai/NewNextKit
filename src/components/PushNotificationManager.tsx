@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
 import {
   subscribeUser,
   unsubscribeUser,
@@ -8,9 +8,7 @@ import { urlBase64ToUint8Array } from "~/utils/common";
 import { RootState } from "~/lib/features/store";
 
 export default function PushNotificationManager() {
-  const count = useSelector(
-    (state: { counter: { value: number } }) => state.counter.value,
-  );
+ 
   const globalData = useSelector(
     (state: RootState) => state.globalData,
   );
@@ -39,9 +37,6 @@ export default function PushNotificationManager() {
     padding: "8px 16px",
   };
 
-  // useEffect(() => {
-  //   console.log("globalData", globalData);
-  // }, [globalData])
 
   useEffect(() => {
     if ("serviceWorker" in navigator && "PushManager" in window) {
