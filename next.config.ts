@@ -1,10 +1,11 @@
-import { execSync } from 'child_process';
-import type { NextConfig } from 'next';
-import { Inter } from 'next/font/google';
-
+import { execSync } from "child_process";
+import type { NextConfig } from "next";
 // 运行生成版本号的脚本
-if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'development') {
-  execSync('node generate-version.cjs');
+if (
+  process.env.NODE_ENV === "production" ||
+  process.env.NODE_ENV === "development"
+) {
+  execSync("node generate-version.cjs");
 }
 
 const nextConfig: NextConfig = {
@@ -13,44 +14,44 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        source: '/(.*)',
+        source: "/(.*)",
         headers: [
           {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
+            key: "X-Content-Type-Options",
+            value: "nosniff",
           },
           {
-            key: 'X-Frame-Options',
-            value: 'DENY',
+            key: "X-Frame-Options",
+            value: "DENY",
           },
           {
-            key: 'Referrer-Policy',
-            value: 'strict-origin-when-cross-origin',
+            key: "Referrer-Policy",
+            value: "strict-origin-when-cross-origin",
           },
         ],
       },
       {
-        source: '/_next/static/media/:path*',
+        source: "/_next/static/media/:path*",
         headers: [
           {
-            key: 'Link',
+            key: "Link",
             value: `</_next/static/media/:path*>; rel=preload; as=font; type="font/woff2"; crossorigin="anonymous"`,
           },
         ],
       },
       {
-        source: '/sw.js',
+        source: "/sw.js",
         headers: [
           {
-            key: 'Content-Type',
-            value: 'application/javascript; charset=utf-8',
+            key: "Content-Type",
+            value: "application/javascript; charset=utf-8",
           },
           {
-            key: 'Cache-Control',
-            value: 'no-cache, no-store, must-revalidate',
+            key: "Cache-Control",
+            value: "no-cache, no-store, must-revalidate",
           },
           {
-            key: 'Content-Security-Policy',
+            key: "Content-Security-Policy",
             value: "default-src 'self'; script-src 'self'",
           },
         ],
@@ -58,7 +59,7 @@ const nextConfig: NextConfig = {
     ];
   },
   publicRuntimeConfig: {
-    isProd: process.env.NODE_ENV === 'production',
+    isProd: process.env.NODE_ENV === "production",
   },
 };
 
