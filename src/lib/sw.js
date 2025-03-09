@@ -172,3 +172,25 @@ self.addEventListener("notificationclick", (event) => {
   unreadCount = 0;
   navigator.clearAppBadge?.().catch(console.error);
 });
+
+// 在同步或初始化时发送数据到前端
+const sendGlobalDataToClients = async (type, data) => {
+  const clients = await self.clients.matchAll();
+  clients.forEach((client) => {
+    client.postMessage({ type, data });
+  });
+};
+
+// 示例：在同步完成时调用
+self.addEventListener("sync", (event) => {
+  if (event.tag === "sync-data") {
+    event.waitUntil(
+      (async () => {
+        // 数据同步逻辑
+        await fetchAndCheckData();
+        // 同步完成后发送数据给客户端
+        sendGlobalDataToClients("GLOBAL_DATA_UPDATE", globalData);
+      })(),
+    );
+  }
+});
