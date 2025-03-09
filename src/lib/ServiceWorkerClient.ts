@@ -56,7 +56,7 @@ export class ServiceWorkerClient {
       throw new Error("Service Worker is not registered.");
     }
 
-    // 检查 sync 是否存在并强制类型限制
+    // 检查是否支持 sync 属性
     if (!("sync" in this.registration)) {
       throw new Error("Background Sync is not supported in this browser.");
     }
@@ -66,7 +66,8 @@ export class ServiceWorkerClient {
     };
 
     try {
-      await syncRegistration.register(tag); // 注册后台同步任务
+      // 注册后台同步任务
+      await syncRegistration.register(tag);
       console.log(`Background sync with tag '${tag}' has been triggered.`);
     } catch (error) {
       console.error("Failed to register background sync:", error);

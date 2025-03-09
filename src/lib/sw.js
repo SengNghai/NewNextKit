@@ -13,19 +13,16 @@ const dataHasChanged = (data) => {
 
 // 发送通知
 const sendNotification = (data) => {
-  if (Notification.permission !== "granted") {
+  console.table("sendNotification:", data);
+  if (Notification.permission === "granted") {
+    self.registration.showNotification("Data Updated", {
+      body: "New data is available!",
+      icon: "/icon.png",
+      data: { url: "https://your-website.com" },
+    });
+  } else {
     console.warn("No notification permission granted.");
-    return;
   }
-
-  console.log("data", data);
-  self.registration.showNotification("Data Updated", {
-    body: "New data is available!",
-    icon: "/icon.png",
-    data: {
-      url: "https://your-website.com",
-    },
-  });
 };
 
 // 从 Cache Storage 获取全局数据
@@ -58,12 +55,12 @@ const initializeGlobalData = async () => {
       await storeGlobalData(globalData);
     }
 
-    console.log("Initializing global data:", globalData);
+    console.log("Initialized global data:", globalData);
 
     const clients = await self.clients.matchAll();
     clients.forEach((client) => {
       client.postMessage({
-        type: "GLOBAL_DATA_INITIALIZE", // 添加 type 类型
+        type: "GLOBAL_DATA_INITIALIZE",
         data: globalData,
       });
     });
@@ -72,145 +69,34 @@ const initializeGlobalData = async () => {
   }
 };
 
-// 定期检查 API 接口数据是否发生变化
-const fetchAndCheckData = async () => {
+// 后台同步逻辑
+const syncData = async () => {
   try {
     const response = await fetch(API_URL);
     const data = await response.json();
     if (dataHasChanged(data)) {
       globalData = data; // 更新全局数据
-      await storeGlobalData(globalData); // 更新 Cache Storage
+      await storeGlobalData(globalData);
+
+      // 通知客户端数据更新
+      const clients = await self.clients.matchAll();
+      clients.forEach((client) =>
+        client.postMessage({ type: "GLOBAL_DATA_UPDATE", data: globalData }),
+      );
+
+      // 发送通知
       sendNotification(data);
       unreadCount += data.count || 1;
-      navigator.setAppBadge(unreadCount).catch((error) => {
-        console.error("设置徽章失败:", error);
-      });
-
-      const clients = await self.clients.matchAll();
-      clients.forEach((client) => {
-        client.postMessage({
-          type: "GLOBAL_DATA_UPDATE", // 添加 type 类型
-          data: globalData,
-        });
-      });
-
-      console.log("接口数据是否发生变化--接口数据--后:", data);
-    }
-  } catch (error) {
-    console.error("Error fetching data:", error);
-  }
-};
-
-// 实现后台同步的函数
-const syncData = async () => {
-  console.log("Executing syncData function"); // 添加调试日志
-  // 使用 API_URL 接口来同步全局数据
-  try {
-    const response = await fetch(API_URL);
-    if (response.status === 200) {
-      globalData = await response.json();
-      console.log("实现后台同步的函数 Data synced successfully:", globalData);
-      sendNotification(globalData); // 实现后台同步的后发送通知
-
-      // 发送全局数据更新到客户端，并添加 type 类型
-      const clients = await self.clients.matchAll();
-      clients.forEach((client) => {
-        client.postMessage({
-          type: "GLOBAL_DATA_UPDATE", // 添加 type 类型
-          data: globalData,
-        });
-      });
-    } else {
-      console.warn("Empty response data");
+      navigator.setAppBadge?.(unreadCount).catch(console.error);
     }
   } catch (error) {
     console.error("Error syncing data:", error);
   }
 };
 
-// 定期检查更新
-const checkForUpdates = async () => {
-  if (self.PWA_VERSION !== "2025.03.02.161654") {
-    // 设定版本号对比逻辑
-    self.skipWaiting(); // 跳过等待，立即激活新的 Service Worker
-  }
-};
-
-// 启动定时器定期检查API接口
-const startInterval = () => {
-  intervalId = setInterval(fetchAndCheckData, 5 * 60 * 1000); // 每 5 分钟检查一次
-};
-
-// 清除徽章
-const clearBadge = async () => {
-  try {
-    await navigator.clearAppBadge();
-  } catch (error) {
-    console.error("清除徽章失败:", error);
-  }
-};
-
-// 处理 push 事件
-self.addEventListener("push", (event) => {
-  if (event.data) {
-    const data = event.data.json();
-    console.log("data", data);
-
-    const options = {
-      body: data.body,
-      icon: data.icon || "/icon.png",
-      badge: "/badge.png",
-      vibrate: [100, 50, 100],
-      data: {
-        dateOfArrival: Date.now(),
-        primaryKey: data.primaryKey,
-        url: data.url,
-      },
-    };
-    unreadCount += data.count || 1;
-    navigator.setAppBadge(unreadCount).catch((error) => {
-      console.error("设置徽章失败:", error);
-    });
-
-    console.log("设置徽章数字", unreadCount);
-
-    event.waitUntil(self.registration.showNotification(data.title, options));
-  }
-});
-
-// 处理 notificationclick 事件
-self.addEventListener("notificationclick", (event) => {
-  console.log("Notification click received.", event);
-  event.notification.close();
-
-  const { url } = event.notification.data;
-
-  event.waitUntil(
-    clients
-      .matchAll({ type: "window", includeUncontrolled: true })
-      .then((windowClients) => {
-        for (let client of windowClients) {
-          if (
-            client.url.includes(self.location.origin) &&
-            "navigate" in client
-          ) {
-            client.navigate(url);
-            return client.focus();
-          }
-        }
-        if (clients.openWindow) {
-          return clients.openWindow(url);
-        }
-      }),
-  );
-
-  clearBadge();
-  unreadCount = 0;
-});
-
 // 处理 activate 事件
 self.addEventListener("activate", (event) => {
-  console.log("Service Worker activating.");
+  console.log("Service Worker activating...");
   event.waitUntil(
     (async () => {
       const cacheNames = await caches.keys();
@@ -222,42 +108,67 @@ self.addEventListener("activate", (event) => {
         }),
       );
       await self.clients.claim();
-
-      await initializeGlobalData(); // 在激活时获取全局数据并设置
-      startInterval(); // 启动定时器定期检查API接口
+      await initializeGlobalData(); // 初始化全局数据
     })(),
   );
-  // 调试日志，确保事件处理程序已执行
-  console.log("activate 事件处理程序已执行");
-  // 初始化全局数据并发送到前端
-  initializeGlobalData();
 });
 
-// 处理 fetch 事件
-self.addEventListener("fetch", (event) => {
-  if (event.request.mode === "navigate") {
-    event.respondWith(
-      fetch(event.request).catch(() => {
-        return caches.match("/index.html");
-      }),
-    );
-  }
-});
-
-// 实现后台同步
+// 处理后台同步事件
 self.addEventListener("sync", (event) => {
-  console.log("Sync event triggered:", event.tag); // 添加调试日志
+  console.log(`Sync event triggered: ${event.tag}`);
   if (event.tag === "sync-data") {
-    event.waitUntil(syncData());
+    event.waitUntil(syncData()); // 后台同步
   }
 });
 
-// 设置定期检查更新的间隔
-setInterval(checkForUpdates, 60 * 60 * 1000); // 每小时检查一次
-
-// 处理来自客户端的消息
+// 处理消息事件
 self.addEventListener("message", (event) => {
-  if (event.data && event.data.type === "GET_GLOBAL_DATA") {
+  if (event.data?.type === "GET_GLOBAL_DATA") {
     event.ports[0].postMessage(globalData);
   }
+});
+
+// 处理 push 事件
+self.addEventListener("push", (event) => {
+  if (event.data) {
+    const data = event.data.json();
+    console.log("Push event data:", data);
+
+    const options = {
+      body: data.body,
+      icon: data.icon || "/icon.png",
+      badge: "/badge.png",
+      vibrate: [100, 50, 100],
+      data: { url: data.url || "https://your-website.com" },
+    };
+
+    unreadCount += data.count || 1;
+    navigator.setAppBadge?.(unreadCount).catch(console.error);
+
+    event.waitUntil(self.registration.showNotification(data.title, options));
+  }
+});
+
+// 处理 notificationclick 事件
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const { url } = event.notification.data;
+
+  event.waitUntil(
+    clients
+      .matchAll({ type: "window", includeUncontrolled: true })
+      .then((windowClients) => {
+        for (let client of windowClients) {
+          if (client.url === url && "focus" in client) {
+            return client.focus();
+          }
+        }
+        if (clients.openWindow) {
+          return clients.openWindow(url);
+        }
+      }),
+  );
+
+  unreadCount = 0;
+  navigator.clearAppBadge?.().catch(console.error);
 });
