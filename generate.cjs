@@ -1,6 +1,7 @@
-const fs = require("fs");
-const path = require("path");
-const UglifyJS = require("uglify-js");
+// generate-version.js
+const fs = require('fs');
+const path = require('path');
+const UglifyJS = require('uglify-js');
 
 //==========================提取当前版本号并递增======================================
 // 获取 package.json 的路径
@@ -12,7 +13,6 @@ fs.readFile(packageJsonPath, "utf8", (err, data) => {
     console.error("Error reading package.json:", err);
     return;
   }
-
   try {
     const packageJson = JSON.parse(data);
 
@@ -40,7 +40,7 @@ fs.readFile(packageJsonPath, "utf8", (err, data) => {
 
 //==========================压缩并移动 sw.js 文件======================================
 const uglifyServiceWorker = () => {
-  const inputFilePath = path.join(__dirname, "src/app/utils/sw.js");
+  const inputFilePath = path.join(__dirname, "src/lib/sw.js");
   const outputFilePath = path.join(__dirname, "public/sw.js");
 
   try {

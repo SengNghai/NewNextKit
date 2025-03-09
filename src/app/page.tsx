@@ -7,12 +7,15 @@ import PushNotificationManager from "../components/PushNotificationManager";
 import ClientCurrentDomain from "~/components/ClientCurrentDomain";
 import NetworkedStatus from "~/components/NetworkedStatus";
 import APIResponseTime from "~/components/APIResponseTime";
-import { PWA_VERSION } from '~/utils/version';
 import { useCurrentDomain } from "~/hooks/useCurrentDomain";
+
+import { Button, JumboTabs } from "antd-mobile";
 
 export default function Home() {
   const [message, setMessage] = useState("");
   const currentDomain = useCurrentDomain();
+
+  const handleButton = () => {};
 
   useEffect(() => {
     // 解析 URL 的查询参数
@@ -44,13 +47,32 @@ export default function Home() {
         />
         {/* 显示欢迎消息 */}
         <p>{message}</p>
-        <p>当前的版本号：{PWA_VERSION}</p>
+        <p>当前的版本号：{process.env.APP_VERSION}</p>
+        <div>
+          <Button color="primary" fill="solid">
+            Solid
+          </Button>
+          <Button onClick={handleButton}>轻提示</Button>
+        </div>
+        <div>
+          <JumboTabs>
+            <JumboTabs.Tab title="水果" description="描述文案" key="fruits">
+              菠萝
+            </JumboTabs.Tab>
+            <JumboTabs.Tab title="蔬菜" description="描述文案" key="vegetables">
+              西红柿
+            </JumboTabs.Tab>
+            <JumboTabs.Tab title="动物" description="描述文案" key="animals">
+              蚂蚁
+            </JumboTabs.Tab>
+          </JumboTabs>
+        </div>
         {/* 当前的域名 */}
         <ClientCurrentDomain />
         {/* 当前的网络状态 */}
-        < NetworkedStatus />
+        <NetworkedStatus />
         {/* API 请求时间 */}
-        < APIResponseTime />
+        <APIResponseTime />
         {/* 其它 */}
         <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
           <li className="mb-2">
@@ -60,7 +82,9 @@ export default function Home() {
             </code>
             .
           </li>
-          <li style={{ fontSize: 14, color: 'green' }} className="other">Save and see your changes instantly.</li>
+          <li style={{ fontSize: 14, color: "green" }} className="other">
+            Save and see your changes instantly.
+          </li>
         </ol>
 
         <div className="flex gap-4 items-center flex-col sm:flex-row">
