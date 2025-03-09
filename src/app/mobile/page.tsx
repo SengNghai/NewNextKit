@@ -6,23 +6,40 @@ import React, { useState, useRef, useEffect } from "react";
 export default function MobilePage() {
   const [message, setMessage] = useState(""); // 消息输入内容
   const inputRef = useRef<HTMLInputElement | null>(null); // 引用输入框
+  const containerRef = useRef<HTMLDivElement | null>(null); // 引用整个页面容器
 
   useEffect(() => {
-    // 监听键盘弹出和收起事件（通过 window resize 判断）
-    const handleResize = () => {
-      const isKeyboardVisible = window.innerHeight < document.documentElement.clientHeight;
-      if (isKeyboardVisible) {
-        console.log("键盘弹出");
-      } else {
-        console.log("键盘收起");
+    const handleKeyboardShow = () => {
+      const activeElement = document.activeElement as HTMLElement;
+
+      // 如果输入框被遮挡，将页面向上滚动
+      if (activeElement && containerRef.current) {
+        const offset = activeElement.getBoundingClientRect().bottom - window.innerHeight;
+        if (offset > 0) {
+          containerRef.current.style.transform = `translateY(-${offset + 20}px)`; // 推动页面
+        }
       }
     };
 
-    window.addEventListener("resize", handleResize);
+    const handleKeyboardHide = () => {
+      if (containerRef.current) {
+        containerRef.current.style.transform = "translateY(0px)"; // 恢复页面位置
+      }
+    };
 
-    // 清除事件监听器
+    // 监听键盘事件
+    window.addEventListener("resize", () => {
+      const isKeyboardVisible = window.innerHeight < document.documentElement.clientHeight;
+      if (isKeyboardVisible) {
+        handleKeyboardShow();
+      } else {
+        handleKeyboardHide();
+      }
+    });
+
     return () => {
-      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("resize", handleKeyboardShow);
+      window.removeEventListener("resize", handleKeyboardHide);
     };
   }, []);
 
@@ -41,10 +58,16 @@ export default function MobilePage() {
   };
 
   return (
-    <div style={{ padding: "20px" }}>
-         <div>
-          <Link href="/">移动端</Link>
-        </div>
+    <div
+      ref={containerRef}
+      style={{
+        padding: "20px",
+        transition: "transform 0.3s ease-in-out", // 添加平滑过渡效果
+      }}
+    >
+      <div>
+        <Link href="/">移动端</Link>
+      </div>
       <h1>Mobile Page</h1>
       <div style={{ marginBottom: "10px" }}>
         <input

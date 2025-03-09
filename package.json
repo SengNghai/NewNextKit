@@ -1,6 +1,6 @@
 {
   "name": "newnextkit",
-  "version": "1.0.23",
+  "version": "1.0.28",
   "private": true,
   "scripts": {
     "dev": "next dev -p 9000 --turbopack",

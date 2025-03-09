@@ -17,6 +17,12 @@ export default function StoreProvider({
   useEffect(() => {
     const setup = async () => {
       try {
+        // 检查 Service Worker 支持情况
+        if (!("serviceWorker" in navigator)) {
+          console.warn("Service Worker is not supported in this browser.");
+          return;
+        }
+
         // 获取 ServiceWorkerClient 实例
         const swClient = ServiceWorkerClient.getInstance();
 
@@ -28,11 +34,13 @@ export default function StoreProvider({
         const APP_VERSION = packageJson.version;
 
         if (registration.active) {
+          console.log("Sending INIT_DATA to Service Worker...");
           registration.active.postMessage({
             type: "INIT_DATA",
             payload: { API_DOMAIN, APP_VERSION },
           });
-          console.log("Sent data to Service Worker:", { API_DOMAIN, APP_VERSION });
+        } else {
+          console.warn("Service Worker is not active yet.");
         }
 
         // 触发后台同步
@@ -46,7 +54,7 @@ export default function StoreProvider({
       }
     };
 
-    // 监听 Service Worker 发来的消息
+    // 监听来自 Service Worker 的消息
     const handleMessage = (event: MessageEvent) => {
       if (event.data?.type === "GLOBAL_DATA_UPDATE") {
         console.log("Received global data from Service Worker:", event.data.data);
@@ -55,14 +63,21 @@ export default function StoreProvider({
       }
     };
 
-    navigator.serviceWorker.addEventListener("message", handleMessage);
+    // 确保 Service Worker 注册成功后再添加监听器
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.addEventListener("message", handleMessage);
+    } else {
+      console.warn("Service Worker is not available.");
+    }
 
     console.log("===========StoreProvider===========");
     setup();
 
     // 清理监听器
     return () => {
-      navigator.serviceWorker.removeEventListener("message", handleMessage);
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.removeEventListener("message", handleMessage);
+      }
     };
   }, [updateGlobalData]);
 
