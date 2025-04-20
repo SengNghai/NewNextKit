@@ -40,7 +40,7 @@ fs.readFile(packageJsonPath, "utf8", (err, data) => {
 
 //==========================压缩并移动 sw.js 文件======================================
 const uglifyServiceWorker = () => {
-  const inputFilePath = path.join(__dirname, "src/lib/sw.js");
+  const inputFilePath = path.join(__dirname, "src/lib/pwa/sw.js");
   const outputFilePath = path.join(__dirname, "public/sw.js");
 
   try {

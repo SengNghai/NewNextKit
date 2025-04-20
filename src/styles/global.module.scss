@@ -1,0 +1,32 @@
+html{
+  // font-size: calc(100vw / 375 * 16); /* 以 375px 设计稿为基准 */
+  -webkit-text-size-adjust: 100%; /* 防止 Safari 自动调整字体 */
+  -webkit-tap-highlight-color: transparent; /* 防止点击时的高亮 */
+  -webkit-user-select: none; /* 防止文本选择 */
+  -moz-user-select: none; /* 防止文本选择 */
+  -ms-user-select: none; /* 防止文本选择 */
+  -o-user-select: none; /* 防止文本选择 */
+  user-select: none; /* 防止文本选择 */
+}
+html, body {
+  touch-action: manipulation;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+}
+
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+  --rem-base: 16px;
+}
+
+/*
+const styles = {
+  width: `calc(300px / var(--rem-base))`,
+  height: `calc(300px / var(--rem-base))`,
+};
+*/

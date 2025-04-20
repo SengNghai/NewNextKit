@@ -1,0 +1,29 @@
+
+
+@import "~/styles/base.module.scss";
+
+
+.header {
+    height: px2rem(50);
+    font-size: px2rem(24);
+    line-height: px2rem(50);
+    text-align: center;
+    color: #333;
+    background-color: #fff;
+}
+
+.content {
+  flex: 1;
+  overflow-y: auto;
+  background-color: #f0f0f0;
+  height: calc(100vh - px2rem(100));
+}
+
+.footer {
+  height: px2rem(50);
+  font-size: px2rem(24);
+  line-height: px2rem(50);
+  text-align: center;
+  color: #333;
+  background-color: #fff;
+}

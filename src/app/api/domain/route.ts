@@ -2,9 +2,20 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export async function GET(request: NextRequest) {
-  const protocol = request.headers.get('x-forwarded-proto') || 'http';
-  const host = request.headers.get('host');
-  const currentDomain = `${protocol}://${host}`;
+  try {
+    const protocol = request.headers.get('x-forwarded-proto') || 'https';
+    const host = request.headers.get('host');
 
-  return NextResponse.json({ currentDomain });
+    if (!host) {
+      return NextResponse.json({ error: "Missing host header" }, { status: 400 });
+    }
+
+    return new NextResponse(JSON.stringify({ currentDomain: `${protocol}://${host}` }), {
+      headers: { "Content-Type": "application/json" },
+    });
+
+  } catch (error) {
+    console.error("Error processing request:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  }
 }

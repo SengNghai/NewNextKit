@@ -1,0 +1,5 @@
+// ✅ 设定 `root-font-size`，默认 100（可调整）
+@function px2rem($px) {
+    // 根元素字体为100px
+    @return ($px / 100) * 1rem;
+  }

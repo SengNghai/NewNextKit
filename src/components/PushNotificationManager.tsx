@@ -4,7 +4,7 @@ import {
   subscribeUser,
   unsubscribeUser,
 } from "~/app/actions";
-import { urlBase64ToUint8Array } from "~/utils/common";
+import { urlBase64ToUint8Array } from "~/lib/utils/common";
 import { RootState } from "~/lib/features/store";
 
 export default function PushNotificationManager() {
@@ -73,7 +73,7 @@ export default function PushNotificationManager() {
     await subscribeUser(serializedSub);
 
     // 使用 WebSocket 订阅
-    // const socket = io('http://localhost:3000', {
+    // const socket = io('http://localhost:4000', {
     //   path: '/api/socket',
     // });
 

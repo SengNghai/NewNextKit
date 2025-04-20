@@ -14,16 +14,22 @@ export class ServiceWorkerClient {
   }
 
   // 注册 Service Worker
-  async register(
-    serviceWorkerPath: string,
-  ): Promise<ServiceWorkerRegistration> {
+  async register(serviceWorkerPath: string): Promise<ServiceWorkerRegistration> {
     if (!("serviceWorker" in navigator)) {
       throw new Error("Service Worker is not supported in this browser.");
     }
 
-    this.registration =
-      await navigator.serviceWorker.register(serviceWorkerPath);
+    this.registration = await navigator.serviceWorker.register(serviceWorkerPath);
     console.log("Service Worker registered:", this.registration);
+
+    // 确保 Service Worker 已激活
+    if (!this.registration.active) {
+      console.log("等待 Service Worker 激活...");
+      await new Promise((resolve) => {
+        navigator.serviceWorker.addEventListener("controllerchange", () => resolve(null));
+      });
+    }
+
     return this.registration;
   }
 
@@ -44,30 +50,22 @@ export class ServiceWorkerClient {
       };
 
       // 发送数据请求
-      this.registration.active.postMessage({ type: "SYNC_DATA_REQUEST" }, [
-        messageChannel.port2,
-      ]);
+      this.registration.active.postMessage({ type: "SYNC_DATA_REQUEST" }, [messageChannel.port2]);
     });
   }
 
   // 触发后台同步任务
   async triggerBackgroundSync(tag: string): Promise<void> {
-    if (!this.registration) {
-      throw new Error("Service Worker is not registered.");
+    if (!this.registration || !this.registration.active) {
+      throw new Error("Service Worker is not registered or active.");
     }
 
-    // 检查是否支持 sync 属性
     if (!("sync" in this.registration)) {
       throw new Error("Background Sync is not supported in this browser.");
     }
 
-    const syncRegistration = this.registration.sync as {
-      register(tag: string): Promise<void>;
-    };
-
     try {
-      // 注册后台同步任务
-      await syncRegistration.register(tag);
+      await (this.registration.sync as { register(tag: string): Promise<void> }).register(tag);
       console.log(`Background sync with tag '${tag}' has been triggered.`);
     } catch (error) {
       console.error("Failed to register background sync:", error);

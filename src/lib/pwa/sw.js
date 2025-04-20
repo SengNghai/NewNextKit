@@ -1,9 +1,15 @@
-let apiDomain = ""; // 动态接收的 API 域
-let appVersion = ""; // 动态接收的应用版本号
 
 let CACHE_NAME = ""; // 缓存名称将在接收 APP_VERSION 后设置
-let API_URL = ""; // API URL 将基于 apiDomain 设置
+let GLOBAL_API = ""; // API URL 将基于 apiDomain 设置
 const GLOBAL_DATA_CACHE = "global-data-cache";
+const urlsToCache = [
+  "/", 
+  "/chats", 
+  "/counter", 
+  "/dashboard", 
+  "/domaincheck", 
+  "/mobile", 
+]; // 关键页面
 
 let unreadCount = 0; // 未读消息数量
 let globalData = {}; // 全局数据初始化为空对象
@@ -14,27 +20,25 @@ self.addEventListener("message", (event) => {
     const { API_DOMAIN, APP_VERSION } = event.data.payload;
 
     // 动态设置全局变量
-    apiDomain = API_DOMAIN;
-    appVersion = APP_VERSION;
-
-    CACHE_NAME = `cache-v${appVersion}`;
-    API_URL = `${apiDomain}/api/domain`;
+  
+    CACHE_NAME = `cache-v${APP_VERSION}`;
+    GLOBAL_API = API_DOMAIN;
 
     console.log("Service Worker received INIT_DATA:", {
-      apiDomain,
-      appVersion,
       CACHE_NAME,
-      API_URL,
+      GLOBAL_API,
     });
 
     // 开始初始化全局数据
     initializeGlobalData();
   }
 
+  // 处理消息事件
   if (event.data?.type === "GET_GLOBAL_DATA") {
     event.ports[0].postMessage(globalData);
   }
 });
+
 
 // 检查数据是否发生变化的函数
 const dataHasChanged = (data) => {
@@ -75,8 +79,8 @@ const storeGlobalData = async (data) => {
 
 // 初始化全局数据并发送到前端
 const initializeGlobalData = async () => {
-  if (!apiDomain || !appVersion) {
-    console.warn("API_DOMAIN or APP_VERSION is not set. Initialization skipped.");
+  if (!GLOBAL_API || !CACHE_NAME) {
+    console.warn("GLOBAL_API 或 CACHE_NAME 未设置，跳过初始化");
     return;
   }
 
@@ -84,12 +88,29 @@ const initializeGlobalData = async () => {
     globalData = (await getStoredGlobalData()) || {};
 
     if (Object.keys(globalData).length === 0) {
-      const response = await fetch(API_URL);
-      globalData = await response.json();
+      console.log(`Fetching global data from: ${GLOBAL_API}`);
+
+      const response = await fetch(GLOBAL_API);
+
+      // 输出返回的内容以检查是否是 HTML
+      const textResponse = await response.text();
+      console.log("Raw response text:", textResponse);
+
+      const contentType = response.headers.get("Content-Type");
+      console.log("Response Content-Type:", contentType);
+
+      // // 如果响应包含 '<!DOCTYPE', 说明是 HTML 错误页面
+      if (!contentType || !contentType.includes("application/json") || textResponse.includes("<!DOCTYPE")) {
+        throw new Error(`Unexpected response format: ${contentType} - Raw Response: ${textResponse.slice(0, 100)}`);
+      }
+
+      // 解析 JSON
+      globalData = JSON.parse(textResponse);
+
       await storeGlobalData(globalData);
     }
 
-    console.log("Initialized global data:", globalData);
+    console.log("初始化全局数据:", globalData);
 
     const clients = await self.clients.matchAll();
     clients.forEach((client) => {
@@ -99,19 +120,20 @@ const initializeGlobalData = async () => {
       });
     });
   } catch (error) {
-    console.error("Error initializing global data:", error);
+    console.error("初始化全局数据时发生错误:", error);
   }
 };
 
+
 // 后台同步逻辑
 const syncData = async () => {
-  if (!API_URL) {
-    console.warn("API_URL is not set. Synchronization skipped.");
+  if (!GLOBAL_API) {
+    console.warn("GLOBAL_API is not set. Synchronization skipped.");
     return;
   }
 
   try {
-    const response = await fetch(API_URL);
+    const response = await fetch(GLOBAL_API);
     const data = await response.json();
     if (dataHasChanged(data)) {
       globalData = data; // 更新全局数据
@@ -132,6 +154,39 @@ const syncData = async () => {
     console.error("Error syncing data:", error);
   }
 };
+
+
+/**
+ * 处理安装事件
+ * @param event Service Worker 安装事件
+ */
+self.addEventListener("install", (event) => {
+  console.log("Service Worker installing...");
+
+  if (!CACHE_NAME) {
+    console.warn("CACHE_NAME is not set, skipping cache initialization.");
+    return;
+  }
+
+  event.waitUntil(
+    caches.open(CACHE_NAME).then(async (cache) => {
+      try {
+        const validUrls = await Promise.all(
+          urlsToCache.map(async (url) => {
+            const response = await fetch(url, { method: "HEAD" });
+            return response.ok ? url : null;
+          })
+        );
+
+        await cache.addAll(validUrls.filter((url) => url !== null));
+        console.log("Cached initial resources:", validUrls.filter(Boolean));
+      } catch (error) {
+        console.error("Failed to cache resources:", error);
+      }
+    })
+  );
+});
+
 
 // 处理 activate 事件
 self.addEventListener("activate", (event) => {
@@ -159,12 +214,6 @@ self.addEventListener("sync", (event) => {
   }
 });
 
-// 处理消息事件
-self.addEventListener("message", (event) => {
-  if (event.data?.type === "GET_GLOBAL_DATA") {
-    event.ports[0].postMessage(globalData);
-  }
-});
 
 // 处理 push 事件
 self.addEventListener("push", (event) => {
@@ -177,7 +226,7 @@ self.addEventListener("push", (event) => {
       icon: data.icon || "/icon.png",
       badge: "/badge.png",
       vibrate: [100, 50, 100],
-      data: { url: data.url || "https://your-website.com" },
+      data: { url: data.url || "/" }, // 默认打开首页
     };
 
     unreadCount += data.count || 1;
@@ -187,10 +236,20 @@ self.addEventListener("push", (event) => {
   }
 });
 
-// 在同步或初始化时发送数据到前端
-const sendGlobalDataToClients = async (type, data) => {
-  const clients = await self.clients.matchAll();
-  clients.forEach((client) => {
-    client.postMessage({ type, data });
-  });
-};
+
+// 监听通知点击事件
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close(); // 关闭通知
+
+  const url = event.notification.data?.url || "/"; // 获取 URL
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
+      for (const client of clients) {
+        if (client.url.includes(self.location.origin) && "focus" in client) {
+          return client.focus(); // 如果 PWA 已打开，则聚焦
+        }
+      }
+      return self.clients.openWindow(url); // 否则新开 PWA 内部窗口
+    })
+  );
+});

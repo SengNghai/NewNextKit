@@ -2,7 +2,8 @@ const config = {
   plugins: [
     "@tailwindcss/postcss",
     [
-      "postcss-px-to-viewport",
+
+      /*"postcss-px-to-viewport",
       {
         unitToConvert: "px", // 需要转换的单位，默认为"px"
         viewportWidth: 750, // 设计稿的视口宽度
@@ -19,6 +20,14 @@ const config = {
         landscape: false, // 是否添加根据 landscapeWidth 生成的媒体查询条件
         landscapeUnit: "vw", // 横屏时使用的单位
         landscapeWidth: 1920, // 横屏时使用的视口宽度
+      },
+      */
+      "postcss-plugin-px2rem",
+      {
+        rootValue: 100, // 根字体大小 (可根据设计稿调整)
+        unitPrecision: 5, // 保留 `rem` 小数位数
+        propList: ["*"], // 所有属性都转换 `px → rem`
+        exclude: /node_modules/, // 排除 `node_modules`
       },
     ]
   ],

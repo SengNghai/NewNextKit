@@ -11,6 +11,7 @@ if (
 }
 
 
+
 const GLOBAL_API_DOMAIN = process.env.NODE_ENV === "development" ? process.env.API_DOMAIN_DEV : process.env.API_DOMAIN_PRO;
 const nextConfig: NextConfig = {
   transpilePackages: ["antd-mobile"],
@@ -76,18 +77,6 @@ const nextConfig: NextConfig = {
   },
   publicRuntimeConfig: {
     isProd: process.env.NODE_ENV === "production",
-  },
-  webpack: (config, { isServer }) => {
-    // 修改 webpack 配置
-
-    // 确保在客户端编译时禁用 `fs` 模块
-    if (!isServer) {
-      config.resolve.fallback = {
-        fs: false,
-      };
-    }
-
-    return config;
   },
 };
 
